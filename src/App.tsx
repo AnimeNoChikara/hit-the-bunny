@@ -1,27 +1,40 @@
 import { useEffect, useState, useRef } from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
 import "./App.css";
-
 import hitSfx from "./assets/hit.wav";
 import missSfx from "./assets/miss.mp3";
+import { supabase } from "./lib/supabaseClient";
+
+type LeaderboardEntry = {
+  fid: number;
+  username: string | null;
+  display_name: string | null;
+  best_score: number;
+};
+
+//const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+
 
 const HOLES_COUNT = 9;
 const GAME_DURATION = 30; // detik
 const BUNNY_INTERVAL = 700; // ms
 const LEADERBOARD_KEY = "bunny_hit_leaderboard";
 
-type LeaderboardEntry = {
-  name: string;
-  score: number;
+
+// di atas, dekat type LeaderboardEntry
+type MiniAppUser = {
+  fid: number;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
 };
+
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [score, setScore] = useState(0);
   const [activeHole, setActiveHole] = useState<number | null>(null);
-
-  const [playerName, setPlayerName] = useState("");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
@@ -31,6 +44,51 @@ function App() {
   const bunnyPopRef = useRef<HTMLAudioElement | null>(null);
   const hitRef = useRef<HTMLAudioElement | null>(null);
   const missRef = useRef<HTMLAudioElement | null>(null);
+
+  const [currentUser, setCurrentUser] = useState<MiniAppUser | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      // 0. Log dulu biar tahu efeknya jalan
+      console.log("Init miniapp effect start");
+
+      // 1. Jangan biarkan error sdk bikin app blank
+      try {
+        // Ini cuma kasih sinyal ke host kalau UI siap.
+        // Di browser biasa (localhost), kalau gagal ya sudah, kita abaikan saja.
+        await sdk.actions.ready();
+      } catch (e) {
+        console.warn("miniapp sdk ready() error (boleh diabaikan di localhost):", e);
+      }
+
+      // 2. Coba baca context TAPI jangan paksa, kalau gagal ya skip
+      try {
+        // sdk.context adalah Promise → WAJIB di-await
+        const context = await sdk.context; // <— perbaikan utama di sini
+
+        if (context?.user?.fid) {
+          const ctxUser = context.user as MiniAppUser;
+          setCurrentUser({
+            fid: ctxUser.fid,
+            username: ctxUser.username,
+            displayName: ctxUser.displayName,
+            pfpUrl: ctxUser.pfpUrl,
+          });
+          console.log("Miniapp user ditemukan:", ctxUser);
+        } else {
+          console.log("Context ada, tapi user kosong (mungkin bukan dibuka dari mini app)");
+        }
+      } catch (e) {
+        // Di localhost wajar kalau ini error, yang penting jangan sampai app crash
+        console.warn("Tidak bisa baca sdk.context (wajar kalau di localhost):", e);
+      }
+
+      console.log("Init miniapp effect end");
+    };
+
+    void init();
+  }, []);
+
 
   // Miniapp ready
   useEffect(() => {
@@ -63,6 +121,12 @@ function App() {
       console.warn("Failed to load leaderboard:", e);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isLeaderboardOpen) return;
+    void refreshLeaderboard();
+  }, [isLeaderboardOpen]);
+
 
   // Countdown
   useEffect(() => {
@@ -105,10 +169,11 @@ function App() {
   }, [isPlaying]);
 
   const startGame = () => {
-    if (!playerName.trim()) {
-      alert("Isi nama dulu sebelum mulai ya! 🐰");
+    if (!currentUser) {
+      alert("Buka game ini lewat Farcaster/Base dulu supaya kami bisa baca akunmu 🟣");
       return;
     }
+
     setScore(0);
     setTimeLeft(GAME_DURATION);
     setIsPlaying(true);
@@ -122,41 +187,71 @@ function App() {
     saveScoreToLeaderboard();
   };
 
-  const saveScoreToLeaderboard = () => {
-    if (!playerName.trim() || score <= 0) return;
+  const saveScoreToLeaderboard = async () => {
+    if (!currentUser || score <= 0) return;
 
-    setLeaderboard((prev) => {
-      // Cek kalau nama sudah ada → update kalau skor baru lebih tinggi
-      const existingIndex = prev.findIndex(
-        (entry) => entry.name.toLowerCase() === playerName.trim().toLowerCase()
+    const fid = currentUser.fid;
+    const username = currentUser.username ?? null;
+    const displayName = currentUser.displayName ?? null;
+
+    // 1. Ambil skor existing untuk user ini
+    const { data: existing, error: fetchError } = await supabase
+      .from("leaderboard")
+      .select("best_score")
+      .eq("fid", fid)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.warn("Gagal baca leaderboard:", fetchError);
+      return;
+    }
+
+    // 2. Kalau belum ada row / skor baru lebih tinggi → upsert
+    const existingBest = existing?.best_score ?? 0;
+    if (score <= existingBest) {
+      // skor baru lebih kecil / sama, tidak usah update
+      return;
+    }
+
+    const { error: upsertError } = await supabase
+      .from("leaderboard")
+      .upsert(
+        {
+          fid,
+          username,
+          display_name: displayName,
+          best_score: score,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "fid",
+        }
       );
 
-      let updated: LeaderboardEntry[];
+    if (upsertError) {
+      console.warn("Gagal upsert leaderboard:", upsertError);
+      return;
+    }
 
-      if (existingIndex !== -1) {
-        const currentEntry = prev[existingIndex];
-        const bestScore = Math.max(currentEntry.score, score);
-        updated = [
-          ...prev.slice(0, existingIndex),
-          { ...currentEntry, score: bestScore },
-          ...prev.slice(existingIndex + 1),
-        ];
-      } else {
-        updated = [...prev, { name: playerName.trim(), score }];
-      }
-
-      // Sort desc by score
-      updated.sort((a, b) => b.score - a.score);
-
-      try {
-        window.localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(updated));
-      } catch (e) {
-        console.warn("Failed to save leaderboard:", e);
-      }
-
-      return updated;
-    });
+    // 3. Refresh leaderboard lokal (misal top 20)
+    await refreshLeaderboard();
   };
+
+  const refreshLeaderboard = async () => {
+  const { data, error } = await supabase
+    .from("leaderboard")
+    .select("fid, username, display_name, best_score")
+    .order("best_score", { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.warn("Gagal load leaderboard:", error);
+    return;
+  }
+
+  setLeaderboard(data as LeaderboardEntry[]);
+};
+
 
   const handleHoleClick = (index: number) => {
     if (!isPlaying) {
@@ -207,22 +302,25 @@ function App() {
         </button>
       </header>
 
-      {/* Name + info bar */}
       <section className="panel">
         <div className="player-row">
-          <label className="player-label">
-            Nama:
-            <input
-              type="text"
-              className="player-input"
-              placeholder="Masukkan nama kamu"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              disabled={isPlaying}
-            />
-          </label>
+          {currentUser ? (
+            <div className="player-info">
+              <div className="player-name">
+                {currentUser.displayName || currentUser.username || `User #${currentUser.fid}`}
+              </div>
+              <div className="player-handle">
+                @{currentUser.username ?? "unknown"} · fid {currentUser.fid}
+              </div>
+            </div>
+          ) : (
+            <div className="player-info">
+              <div className="player-name">Guest</div>
+              <div className="player-handle">Buka dari Farcaster/Base biar auto login</div>
+            </div>
+          )}
         </div>
-
+        {/* ... info-bar & progress bar tetap sama */}
         <div className="info-bar">
           <div className="info-item">
             <span className="info-label">Waktu</span>
@@ -303,10 +401,12 @@ function App() {
             ) : (
               <ul className="leaderboard-list">
                 {leaderboard.map((entry, index) => (
-                  <li key={entry.name} className="leaderboard-item">
+                  <li key={entry.fid} className="leaderboard-item">
                     <span className="lb-rank">{index + 1}</span>
-                    <span className="lb-name">{entry.name}</span>
-                    <span className="lb-score">{entry.score}</span>
+                    <span className="lb-name">
+                      {entry.display_name || entry.username || `fid ${entry.fid}`}
+                    </span>
+                    <span className="lb-score">{entry.best_score}</span>
                   </li>
                 ))}
               </ul>
