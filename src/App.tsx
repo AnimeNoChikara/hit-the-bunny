@@ -6,6 +6,7 @@ import "./App.css";
 // Atau ganti path/namanya kalau beda.
 import hitSfx from "./assets/hit.wav";
 import missSfx from "./assets/miss.mp3";
+import bunnyImg from "./assets/bunny.png";
 
 // Kalau kamu sudah punya supabaseClient.ts, pakai import ini:
 import { supabase } from "./lib/supabaseClient";
@@ -377,14 +378,19 @@ function App() {
       <main className="game-card">
         <div className="grid">
           {Array.from({ length: HOLES_COUNT }).map((_, index) => (
-            <button
+           <button
               key={index}
               className={`hole ${activeHole === index ? "active" : ""}`}
               onClick={() => handleHoleClick(index)}
             >
-              <span className={`bunny ${activeHole === index ? "bunny-in" : "bunny-out"}`}>
-                {activeHole === index ? "🐰" : ""}
-              </span>
+              {activeHole === index && (
+                <img
+                  src={bunnyImg}
+                  alt="Bunny"
+                  className="bunny bunny-in bunny-img"
+                  draggable={false}
+                />
+              )}
             </button>
           ))}
         </div>
