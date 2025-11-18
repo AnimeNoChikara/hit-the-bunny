@@ -54,6 +54,13 @@ function App() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
+  // Tambahkan ini:
+  const scoreRef = useRef(0);
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
+
+
   // ---------- INIT: miniapp + user + audio ----------
   useEffect(() => {
     const init = async () => {
@@ -117,8 +124,7 @@ function App() {
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // waktu habis → otomatis akhiri game + simpan skor
-          void stopGame();
+          void stopGame();  // 🟢 ini penting
           return 0;
         }
         return prev - 1;
@@ -128,8 +134,8 @@ function App() {
     return () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying]);
+  }, [isPlaying]); // ini boleh tetap seperti ini
+
 
   // ---------- Bunny bergerak ----------
   useEffect(() => {
@@ -175,7 +181,7 @@ function App() {
   };
 
   const stopGame = async () => {
-    console.log("[stopGame] dipanggil, score:", score);
+    console.log("[stopGame] dipanggil, score (state):", scoreRef.current);
 
     setIsPlaying(false);
     setActiveHole(null);
@@ -185,6 +191,7 @@ function App() {
 
     await saveScoreToLeaderboard();
   };
+
 
   const handleHoleClick = (index: number) => {
     if (!isPlaying) return;
@@ -234,14 +241,16 @@ function App() {
   };
 
   const saveScoreToLeaderboard = async () => {
-    console.log("[saveScoreToLeaderboard] mulai, user:", currentUser, "score:", score);
+    const finalScore = scoreRef.current; // 🟢 ambil skor terbaru dari ref
+
+    console.log("[saveScoreToLeaderboard] mulai, user:", currentUser, "score:", finalScore);
 
     if (!currentUser) {
       console.warn("[saveScoreToLeaderboard] currentUser kosong → tidak simpan");
       return;
     }
 
-    if (score <= 0) {
+    if (finalScore <= 0) {
       console.warn("[saveScoreToLeaderboard] score <= 0 → tidak simpan");
       return;
     }
@@ -251,7 +260,6 @@ function App() {
     const displayName = currentUser.displayName ?? null;
 
     try {
-      // 1. Cek skor lama user ini
       const { data: existing, error: fetchError } = await supabase
         .from("leaderboard")
         .select("best_score")
@@ -268,15 +276,14 @@ function App() {
         "[saveScoreToLeaderboard] best lama:",
         existingBest,
         "score baru:",
-        score
+        finalScore
       );
 
-      if (score <= existingBest) {
+      if (finalScore <= existingBest) {
         console.log("[saveScoreToLeaderboard] score baru tidak lebih tinggi, skip update");
         return;
       }
 
-      // 2. Upsert (1 fid = 1 baris)
       const { error: upsertError } = await supabase
         .from("leaderboard")
         .upsert(
@@ -284,7 +291,7 @@ function App() {
             fid,
             username,
             display_name: displayName,
-            best_score: score,
+            best_score: finalScore,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "fid" }
@@ -296,15 +303,13 @@ function App() {
       }
 
       console.log("[saveScoreToLeaderboard] upsert sukses");
-
-      // 3. Refresh leaderboard
       await refreshLeaderboard();
     } catch (e) {
       console.error("[saveScoreToLeaderboard] error tak terduga:", e);
     }
   };
 
-  // ---------- UI ----------
+    // ---------- UI ----------
   return (
     <div className="app">
       {/* Top bar */}
