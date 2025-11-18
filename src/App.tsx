@@ -128,11 +128,12 @@ function App() {
     if (!isPlaying) return;
 
     if (timerRef.current) window.clearInterval(timerRef.current);
+
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // jangan lupa panggil stopGame di sini
-          void stopGame();
+          // waktu habis → otomatis akhiri game + simpan skor
+          void stopGame();  // <— PENTING: panggil di sini
           return 0;
         }
         return prev - 1;
@@ -143,6 +144,7 @@ function App() {
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
   }, [isPlaying]);
+
 
   // Bunny muncul random
   useEffect(() => {
@@ -183,9 +185,8 @@ function App() {
     if (timerRef.current) window.clearInterval(timerRef.current);
     if (bunnyRef.current) window.clearInterval(bunnyRef.current);
 
-    await saveScoreToLeaderboard();
+    await saveScoreToLeaderboard(); // <— ini yang nyimpan ke Supabase
   };
-
 
   const saveScoreToLeaderboard = async () => {
     console.log("[saveScoreToLeaderboard] mulai, currentUser:", currentUser, "score:", score);
@@ -385,13 +386,9 @@ function App() {
         </div>
 
         <div className="controls">
-          {!isPlaying ? (
+          {!isPlaying && (
             <button className="primary-btn" onClick={startGame}>
               {timeLeft === 0 ? "Main Lagi" : "Mulai Game"}
-            </button>
-          ) : (
-            <button className="secondary-btn" onClick={stopGame}>
-              Selesai
             </button>
           )}
         </div>
