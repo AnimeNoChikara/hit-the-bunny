@@ -8,6 +8,7 @@ body {
   background: radial-gradient(circle at top, #0b1120, #020617);
   color: #f9fafb;
   justify-content: center;
+  overflow: hidden;
 }
 
 .app {

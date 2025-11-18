@@ -8,22 +8,22 @@
     "version": "1",
     "name": "Bunny Hit the Hole",
     "homeUrl": "https://hit-the-bunny.vercel.app",
-    "iconUrl": "https://your-domain.com/icon.png",
-    "splashImageUrl": "https://your-domain.com/splash.png",
-    "splashBackgroundColor": "#020617",
-    "webhookUrl": "https://your-domain.com/api/webhook",
+    "iconUrl": "https://hit-the-bunny.vercel.app/icon.png",
+    "splashImageUrl": "https://hit-the-bunny.vercel.app/splash.png",
+    "splashBackgroundColor": "#051452",
+    "webhookUrl": "https://hit-the-bunny.vercel.app/api/webhook",
     "subtitle": "Tap the bunny, beat your friends",
     "description": "A fast, fun bunny-whack game you can play inside Farcaster/Base mini apps.",
     "screenshotUrls": [
-      "https://your-domain.com/s1.png"
+      "hit-the-bunny.vercel.app/s1.png"
     ],
     "primaryCategory": "game",
     "tags": ["game", "bunny", "miniapp", "baseapp"],
-    "heroImageUrl": "https://your-domain.com/og.png",
+    "heroImageUrl": "hit-the-bunny.vercel.app/og.png",
     "tagline": "Hit the bunny, climb the leaderboard",
     "ogTitle": "Bunny Hit the Hole",
     "ogDescription": "Play a bunny whack game with your frens onchain.",
-    "ogImageUrl": "https://your-domain.com/og.png",
+    "ogImageUrl": "hit-the-bunny.vercel.app/og.png",
     "noindex": false
   }
 }
