@@ -197,7 +197,8 @@ body {
 }
 
 .hole.active {
-  background: radial-gradient(circle at 30% 20%, #d4af37, #f0c75e);
+  background: radial-gradient(circle at 30% 20%, #d4af37, #61532e);
+  
 }
 
 /* Bunny animation */
