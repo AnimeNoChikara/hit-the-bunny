@@ -50,8 +50,6 @@ body {
   border: none;
   padding: 8px 12px;
   font-size: 1.4rem;
-  background: linear-gradient(to bottom right, #fbbf24, #f97316);
-  box-shadow: 0 4px 10px rgba(251, 191, 36, 0.4);
   cursor: pointer;
   transform: translateY(0);
   transition: transform 0.08s ease, box-shadow 0.08s ease;
@@ -62,6 +60,10 @@ body {
   box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3);
 }
 
+.trophy-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.4);
+}
 /* Panel info */
 
 .panel {
@@ -435,5 +437,56 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  outline: none;
 }
 
+.hole {
+  outline: none;
+}
+
+.hole:focus,
+.hole:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.hole {
+  position: relative;
+  width: 100px;   /* atau ukuran yang kamu mau */
+  height: 100px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* gambar kelinci */
+.bunny-img {
+  width: 80%;
+  height: auto;
+  pointer-events: none; /* kliknya tetap ke button, bukan ke gambar */
+}
+
+/* sudah ada sebelumnya, tapi pastikan mirip ini */
+.bunny {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* animasi muncul */
+.bunny-in {
+  animation: bunny-pop 0.16s ease-out forwards;
+}
+
+@keyframes bunny-pop {
+  from {
+    transform: translate(-50%, -40%) scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
