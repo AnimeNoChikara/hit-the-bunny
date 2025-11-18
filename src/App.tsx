@@ -4,7 +4,7 @@ import "./App.css";
 
 // ⚠️ Pastikan file audio ini ada di src/assets/
 // Atau ganti path/namanya kalau beda.
-import hitSfx from "./assets/hit.mp3";
+import hitSfx from "./assets/hit.mov";
 import missSfx from "./assets/miss.mp3";
 
 // Kalau kamu sudah punya supabaseClient.ts, pakai import ini:
