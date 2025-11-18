@@ -7,6 +7,7 @@ body {
   margin: 0;
   background: radial-gradient(circle at top, #0b1120, #020617);
   color: #f9fafb;
+  justify-content: center;
 }
 
 .app {
@@ -415,4 +416,32 @@ body {
   .game-card {
     padding: 14px 12px 18px;
   }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-template-rows: repeat(3, 100px);
+  gap: 14px;
+  justify-content: center; /* agar grid selalu berada di tengah */
+  align-items: center;
+}
+
+.hole {
+  position: relative;        /* penting untuk bunny absolute di dalam */
+  width: 100px;
+  height: 100px;
+  overflow: hidden;          /* agar animasi tidak mendorong UI */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bunny {
+  position: absolute;        /* tidak mempengaruhi layout hole */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.4rem;
+  pointer-events: none;
 }
