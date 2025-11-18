@@ -4,9 +4,6 @@
     "payload": "",
     "signature": ""
   },
-  "baseBuilder": {
-    "ownerAddress": "0x3cbefeF3980257779E7cD78e58018119eEB9E381"
-  },
   "miniapp": {
     "version": "1",
     "name": "Bunny Hit the Hole",
@@ -28,5 +25,8 @@
     "ogDescription": "Play a bunny whack game with your frens onchain.",
     "ogImageUrl": "https://your-domain.com/og.png",
     "noindex": false
+  },
+    "baseBuilder": {
+    "ownerAddress": "0x3cbefeF3980257779E7cD78e58018119eEB9E381"
   }
 }
