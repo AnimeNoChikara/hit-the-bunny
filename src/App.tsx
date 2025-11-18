@@ -316,11 +316,12 @@ function App() {
           ) : (
             <div className="player-info">
               <div className="player-name">Guest</div>
-              <div className="player-handle">Buka dari Farcaster/Base biar auto login</div>
+              <div className="player-handle">
+                Jalankan di Farcaster/Base untuk auto login
+              </div>
             </div>
           )}
         </div>
-        {/* ... info-bar & progress bar tetap sama */}
         <div className="info-bar">
           <div className="info-item">
             <span className="info-label">Waktu</span>
