@@ -1,0 +1,32 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "baseBuilder": {
+    "ownerAddress": "0xYOUR_BASE_ACCOUNT_ADDRESS"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Bunny Hit the Hole",
+    "homeUrl": "https://your-domain.com",
+    "iconUrl": "https://your-domain.com/icon.png",
+    "splashImageUrl": "https://your-domain.com/splash.png",
+    "splashBackgroundColor": "#020617",
+    "webhookUrl": "https://your-domain.com/api/webhook",
+    "subtitle": "Tap the bunny, beat your friends",
+    "description": "A fast, fun bunny-whack game you can play inside Farcaster/Base mini apps.",
+    "screenshotUrls": [
+      "https://your-domain.com/s1.png"
+    ],
+    "primaryCategory": "game",
+    "tags": ["game", "bunny", "miniapp", "baseapp"],
+    "heroImageUrl": "https://your-domain.com/og.png",
+    "tagline": "Hit the bunny, climb the leaderboard",
+    "ogTitle": "Bunny Hit the Hole",
+    "ogDescription": "Play a bunny whack game with your frens onchain.",
+    "ogImageUrl": "https://your-domain.com/og.png",
+    "noindex": false
+  }
+}
