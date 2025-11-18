@@ -1,9 +1,9 @@
 {
   "accountAssociation": {
-    "header": "",
-    "payload": "",
-    "signature": ""
-  },
+    "header": "eyJmaWQiOjIzOTY2NSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDhkMUJjMTQ5NUZjQ2QwYkY2QmVkZjJCZjMwRDNjNjY2YzE1NDg0RWUifQ",
+    "payload": "eyJkb21haW4iOiJoaXQtdGhlLWJ1bm55LnZlcmNlbC5hcHAifQ",
+    "signature": "MLsmFOvp4vv/ExphKTmf8gFlboIdjeXH3QAqsu5ll7sG7SQzOFPa73NH+Ep695nw6v+Uuu1Q2C69rYeAAyl57hw="
+  }
   "miniapp": {
     "version": "1",
     "name": "Bunny Hit the Hole",
