@@ -3,7 +3,7 @@
     "header": "eyJmaWQiOjIzOTY2NSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDhkMUJjMTQ5NUZjQ2QwYkY2QmVkZjJCZjMwRDNjNjY2YzE1NDg0RWUifQ",
     "payload": "eyJkb21haW4iOiJoaXQtdGhlLWJ1bm55LnZlcmNlbC5hcHAifQ",
     "signature": "MLsmFOvp4vv/ExphKTmf8gFlboIdjeXH3QAqsu5ll7sG7SQzOFPa73NH+Ep695nw6v+Uuu1Q2C69rYeAAyl57hw="
-  }
+  },
   "miniapp": {
     "version": "1",
     "name": "Bunny Hit the Hole",
@@ -25,8 +25,5 @@
     "ogDescription": "Play a bunny whack game with your frens onchain.",
     "ogImageUrl": "https://your-domain.com/og.png",
     "noindex": false
-  },
-    "baseBuilder": {
-    "ownerAddress": "0x3cbefeF3980257779E7cD78e58018119eEB9E381"
   }
 }
