@@ -5,12 +5,12 @@
     "signature": ""
   },
   "baseBuilder": {
-    "ownerAddress": "0xYOUR_BASE_ACCOUNT_ADDRESS"
+    "ownerAddress": "0x3cbefeF3980257779E7cD78e58018119eEB9E381"
   },
   "miniapp": {
     "version": "1",
     "name": "Bunny Hit the Hole",
-    "homeUrl": "https://your-domain.com",
+    "homeUrl": "https://hit-the-bunny.vercel.app",
     "iconUrl": "https://your-domain.com/icon.png",
     "splashImageUrl": "https://your-domain.com/splash.png",
     "splashBackgroundColor": "#020617",

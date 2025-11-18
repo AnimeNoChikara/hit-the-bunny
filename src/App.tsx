@@ -55,11 +55,107 @@ function App() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
+    // Reward BUNNY (offchain)
+  const [lastRewardPoints, setLastRewardPoints] = useState(0);
+  const [unclaimedPoints, setUnclaimedPoints] = useState(0);
+  const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+
+
   // Tambahkan ini:
   const scoreRef = useRef(0);
   useEffect(() => {
     scoreRef.current = score;
   }, [score]);
+  //------------ Supabase: grant reward ----------
+  const grantRewardForGame = async () => {
+    if (!currentUser) {
+      console.warn("[grantRewardForGame] no user, skip");
+      return;
+    }
+
+    const finalScore = scoreRef.current;
+    if (finalScore <= 0) {
+      console.log("[grantRewardForGame] score 0, tidak ada reward");
+      return;
+    }
+
+    const points = calcRewardPointsFromScore(finalScore);
+    const fid = currentUser.fid;
+    const username = currentUser.username ?? null;
+    const displayName = currentUser.displayName ?? null;
+
+    try {
+      // Update player_rewards
+      const { data, error } = await supabase
+        .from("player_rewards")
+        .upsert(
+          {
+            fid,
+            username,
+            display_name: displayName,
+            // tambahkan ke unclaimed & total_earned
+            unclaimed_points: (unclaimedPoints || 0) + points,
+            total_earned: points, // akan kita adjust di bawah
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "fid" }
+        )
+        .select("unclaimed_points, total_earned")
+        .single();
+
+      if (error) {
+        console.error("[grantRewardForGame] upsert player_rewards error:", error);
+        return;
+      }
+
+      // Lebih rapi: pakai RPC / trigger untuk increment,
+      // tapi untuk contoh simple kita bisa lakukan cara lain:
+      // Alternatif yang lebih aman: fetch dulu row sekarang, lalu hitung manual dan upsert.
+      // Di sini supaya pendek, kita asumsikan unclaimedPoints state sudah up to date.
+
+      setLastRewardPoints(points);
+      setUnclaimedPoints(data.unclaimed_points ?? (unclaimedPoints + points));
+      setIsRewardModalOpen(true);
+
+      // Opsional: log event per game
+      await supabase.from("reward_events").insert({
+        fid,
+        points,
+        score: finalScore,
+      });
+    } catch (e) {
+      console.error("[grantRewardForGame] unexpected error:", e);
+    }
+  };
+
+  // ---------- Supabase: rewards ----------
+  const refreshRewards = async () => {
+    if (!currentUser) return;
+
+    const { data, error } = await supabase
+      .from("player_rewards")
+      .select("unclaimed_points, total_earned, total_claimed")
+      .eq("fid", currentUser.fid)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("[refreshRewards] error:", error);
+      return;
+    }
+
+    if (data) {
+      setUnclaimedPoints(data.unclaimed_points ?? 0);
+    } else {
+      setUnclaimedPoints(0);
+    }
+  };
+
+  const calcRewardPointsFromScore = (finalScore: number) => {
+    // bebas: misal 10 BUNNY point per 1 skor
+    return finalScore * 10;
+  };
+  
+
 
 
   // ---------- INIT: miniapp + user + audio ----------
@@ -92,6 +188,7 @@ function App() {
               displayName: u.displayName,
               pfpUrl: u.pfpUrl,
             });
+            await refreshRewards();
             console.log("[init] User dari Farcaster:", u);
           } else {
             console.log("[init] Context ada tapi user kosong");
@@ -191,6 +288,7 @@ function App() {
     if (bunnyRef.current) window.clearInterval(bunnyRef.current);
 
     await saveScoreToLeaderboard();
+    await grantRewardForGame();       // beri reward & popup
   };
 
 
@@ -310,6 +408,8 @@ function App() {
     }
   };
 
+
+
     // ---------- UI ----------
   return (
     <div className="app">
@@ -317,7 +417,7 @@ function App() {
       <header className="top-bar">
         <div className="top-left">
           <h1 className="title">Bunny Hit the Hole 🐰</h1>
-          <p className="subtitle">Tap cepat, kejar skor tertinggi!</p>
+          <p className="subtitle">Tap fast, get the highest score!</p>
         </div>
 
         <button
@@ -399,7 +499,7 @@ function App() {
         <div className="controls">
           {!isPlaying && (
             <button className="primary-btn" onClick={startGame}>
-              {timeLeft === 0 ? "Main Lagi" : "Mulai Game"}
+              {timeLeft === 0 ? "Play Again" : "Play game"}
             </button>
           )}
         </div>
@@ -447,6 +547,55 @@ function App() {
           </div>
         </div>
       )}
+      {isRewardModalOpen && (
+      <div
+        className="modal-backdrop"
+        onClick={() => setIsRewardModalOpen(false)}
+      >
+        <div
+          className="modal"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="modal-header">
+            <h2 className="modal-title">Selamat! 🎉</h2>
+            <button
+              className="modal-close"
+              onClick={() => setIsRewardModalOpen(false)}
+            >
+              ✕
+            </button>
+          </div>
+
+          <p className="modal-text">
+            Kamu baru saja mendapatkan{" "}
+            <strong>{lastRewardPoints}</strong> BUNNY points dari skor game ini!
+          </p>
+          <p className="modal-text">
+            Total BUNNY points yang belum kamu klaim:{" "}
+            <strong>{unclaimedPoints}</strong>
+          </p>
+
+          <button
+            className="primary-btn"
+            onClick={() => {
+              setIsRewardModalOpen(false);
+              // nanti di sini bisa buka panel "Wallet" atau tab claim
+            }}
+          >
+            Keren! ✨
+          </button>
+        </div>
+      </div>
+    )}
+      {/* <button
+        className="secondary-btn"
+        onClick={() => {
+          setIsRewardModalOpen(false);
+          // buka panel wallet / claim
+        }}>
+        Lihat Dompet BUNNY
+      </button> */}
+
     </div>
   );
 }

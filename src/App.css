@@ -190,7 +190,7 @@ body {
 }
 
 .hole.active {
-  background: radial-gradient(circle at 30% 20%, #22c55e, #047857);
+  background: radial-gradient(circle at 30% 20%, #aae613, #b7dc11);
 }
 
 /* Bunny animation */
@@ -489,4 +489,27 @@ body {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
+}
+
+.modal-text {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.wallet-card {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.wallet-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.wallet-text {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
 }
