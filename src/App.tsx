@@ -122,11 +122,6 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!isLeaderboardOpen) return;
-    void refreshLeaderboard();
-  }, [isLeaderboardOpen]);
-
 
   // Countdown
   useEffect(() => {
@@ -136,7 +131,8 @@ function App() {
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          stopGame();
+          // jangan lupa panggil stopGame di sini
+          void stopGame();
           return 0;
         }
         return prev - 1;
@@ -146,7 +142,6 @@ function App() {
     return () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying]);
 
   // Bunny muncul random
@@ -179,78 +174,107 @@ function App() {
     setIsPlaying(true);
   };
 
-  const stopGame = () => {
+  const stopGame = async () => {
+    console.log("[stopGame] dipanggil, score:", score);
+
     setIsPlaying(false);
     setActiveHole(null);
+
     if (timerRef.current) window.clearInterval(timerRef.current);
     if (bunnyRef.current) window.clearInterval(bunnyRef.current);
-    saveScoreToLeaderboard();
+
+    await saveScoreToLeaderboard();
   };
 
+
   const saveScoreToLeaderboard = async () => {
-    if (!currentUser || score <= 0) return;
+    console.log("[saveScoreToLeaderboard] mulai, currentUser:", currentUser, "score:", score);
+
+    if (!currentUser) {
+      console.warn("[saveScoreToLeaderboard] currentUser kosong → tidak simpan skor");
+      return;
+    }
+
+    if (score <= 0) {
+      console.warn("[saveScoreToLeaderboard] score <= 0 → tidak simpan skor");
+      return;
+    }
 
     const fid = currentUser.fid;
     const username = currentUser.username ?? null;
     const displayName = currentUser.displayName ?? null;
 
-    // 1. Ambil skor existing untuk user ini
-    const { data: existing, error: fetchError } = await supabase
-      .from("leaderboard")
-      .select("best_score")
-      .eq("fid", fid)
-      .maybeSingle();
+    try {
+      // 1. Ambil skor lama user ini
+      const { data: existing, error: fetchError } = await supabase
+        .from("leaderboard")
+        .select("best_score")
+        .eq("fid", fid)
+        .maybeSingle();
 
-    if (fetchError) {
-      console.warn("Gagal baca leaderboard:", fetchError);
-      return;
+      if (fetchError) {
+        console.error("[saveScoreToLeaderboard] Gagal baca leaderboard:", fetchError);
+        return;
+      }
+
+      const existingBest = existing?.best_score ?? 0;
+      console.log("[saveScoreToLeaderboard] best lama:", existingBest, "score baru:", score);
+
+      if (score <= existingBest) {
+        console.log("[saveScoreToLeaderboard] score baru tidak lebih besar, skip update");
+        return;
+      }
+
+      // 2. Upsert (1 user = 1 baris, update kalau ada)
+      const { error: upsertError } = await supabase
+        .from("leaderboard")
+        .upsert(
+          {
+            fid,
+            username,
+            display_name: displayName,
+            best_score: score,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "fid" }
+        );
+
+      if (upsertError) {
+        console.error("[saveScoreToLeaderboard] Gagal upsert leaderboard:", upsertError);
+        return;
+      }
+
+      console.log("[saveScoreToLeaderboard] Upsert sukses");
+
+      // 3. Refresh daftar leaderboard (misal top 20)
+      await refreshLeaderboard();
+    } catch (e) {
+      console.error("[saveScoreToLeaderboard] Error tak terduga:", e);
     }
-
-    // 2. Kalau belum ada row / skor baru lebih tinggi → upsert
-    const existingBest = existing?.best_score ?? 0;
-    if (score <= existingBest) {
-      // skor baru lebih kecil / sama, tidak usah update
-      return;
-    }
-
-    const { error: upsertError } = await supabase
-      .from("leaderboard")
-      .upsert(
-        {
-          fid,
-          username,
-          display_name: displayName,
-          best_score: score,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "fid",
-        }
-      );
-
-    if (upsertError) {
-      console.warn("Gagal upsert leaderboard:", upsertError);
-      return;
-    }
-
-    // 3. Refresh leaderboard lokal (misal top 20)
-    await refreshLeaderboard();
   };
 
+
   const refreshLeaderboard = async () => {
-  const { data, error } = await supabase
-    .from("leaderboard")
-    .select("fid, username, display_name, best_score")
-    .order("best_score", { ascending: false })
-    .limit(20);
+    console.log("[refreshLeaderboard] load leaderboard");
+    const { data, error } = await supabase
+      .from("leaderboard")
+      .select("fid, username, display_name, best_score")
+      .order("best_score", { ascending: false })
+      .limit(20);
 
-  if (error) {
-    console.warn("Gagal load leaderboard:", error);
-    return;
-  }
+    if (error) {
+      console.error("[refreshLeaderboard] Gagal load leaderboard:", error);
+      return;
+    }
 
-  setLeaderboard(data as LeaderboardEntry[]);
-};
+    console.log("[refreshLeaderboard] data:", data);
+    setLeaderboard(data as LeaderboardEntry[]);
+  };
+
+    useEffect(() => {
+    if (!isLeaderboardOpen) return;
+    void refreshLeaderboard();
+  }, [isLeaderboardOpen]);
 
 
   const handleHoleClick = (index: number) => {
