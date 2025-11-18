@@ -6,7 +6,7 @@
   },
   "miniapp": {
     "version": "1",
-    "name": "Bunny Hit the Hole",
+    "name": "Hit The Bunny in The Hole",
     "homeUrl": "https://hit-the-bunny.vercel.app",
     "iconUrl": "https://hit-the-bunny.vercel.app/icon.png",
     "splashImageUrl": "https://hit-the-bunny.vercel.app/splash.png",

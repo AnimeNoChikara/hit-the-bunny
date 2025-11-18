@@ -415,22 +415,7 @@ function App() {
     <div className="app">
       {/* Top bar */}
       <header className="top-bar">
-        <div className="top-left">
-          <h1 className="title">Bunny Hit the Hole 🐰</h1>
-          <p className="subtitle">Tap fast, get the highest score!</p>
-        </div>
-
-        <button
-          className="trophy-btn"
-          onClick={handleOpenLeaderboard}
-          aria-label="Lihat leaderboard"
-        >
-          🏆
-        </button>
-      </header>
-
-      {/* Panel info user + timer */}
-      <section className="panel">
+        
         <div className="player-row">
           {currentUser ? (
             <div className="player-info">
@@ -452,14 +437,29 @@ function App() {
             </div>
           )}
         </div>
+          
+        <button
+          className="trophy-btn"
+          onClick={handleOpenLeaderboard}
+          aria-label="Lihat leaderboard"
+        >
+          🏆
+        </button>
+      </header>
 
+      {/* Panel info user + timer */}
+      <section className="panel">
+        <div className="top-left">
+          <h1 className="title"></h1>
+          <p className="subtitle"></p>
+        </div>
         <div className="info-bar">
           <div className="info-item">
-            <span className="info-label">Waktu</span>
+            <span className="info-label">Time</span>
             <span className="info-value">{timeLeft}s</span>
           </div>
           <div className="info-item">
-            <span className="info-label">Skor</span>
+            <span className="info-label">Score</span>
             <span className="info-value">{score}</span>
           </div>
         </div>
