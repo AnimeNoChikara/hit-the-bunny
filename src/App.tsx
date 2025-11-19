@@ -69,6 +69,10 @@ export default function App() {
   // --- congrats modal
   const [isCongratsOpen, setIsCongratsOpen] = useState(false);
 
+  // Beta notice popup
+  const [showBetaNotice, setShowBetaNotice] = useState(true);
+
+
   // --- navbar / menu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -549,6 +553,25 @@ export default function App() {
       <footer className="footer">
         0.1.6
       </footer>
+      {showBetaNotice && (
+        <div className="beta-backdrop" onClick={() => setShowBetaNotice(false)}>
+          <div className="beta-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="beta-title">Beta Notice</h2>
+            <p className="beta-text">
+              This application is currently in beta and still under active development.
+              You may encounter bugs or unfinished features.
+            </p>
+
+            <button
+              className="beta-btn"
+              onClick={() => setShowBetaNotice(false)}
+            >
+              I Understand
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
