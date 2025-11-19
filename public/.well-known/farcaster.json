@@ -10,7 +10,7 @@
     "homeUrl": "https://hit-the-bunny.vercel.app",
     "iconUrl": "https://hit-the-bunny.vercel.app/icon.png",
     "splashImageUrl": "https://hit-the-bunny.vercel.app/splash.png",
-    "splashBackgroundColor": "#051452",
+    "splashBackgroundColor": "#8b0c9e",
     "webhookUrl": "https://hit-the-bunny.vercel.app/api/webhook",
     "subtitle": "Tap Before It Hides!",
     "description": "A fast reaction game where you tap the bunny before it hides. Stay alert and score as many points as you can.",
