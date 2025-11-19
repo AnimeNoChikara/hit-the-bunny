@@ -350,7 +350,6 @@ export default function App() {
             aria-label="Open menu"
           ><i className="fi fi-br-menu-burger"></i>
           </button>
-
           {/* profile avatar only in topbar */}
           <button
             className="avatar-btn"
@@ -381,10 +380,8 @@ export default function App() {
                   <div className="profile-fid">fid {currentUser?.fid ?? "-"}</div>
                 </div>
               </div>
-
-              <div className="menu-actions">
-                <button className="secondary-btn" onClick={() => { setIsMenuOpen(false); setIsLeaderboardOpen(true); }}>View leaderboard</button>
-                <button className="secondary-btn" onClick={() => { setIsMenuOpen(false); setIsPreStartOpen(true); setCountdown(null); setTimeLeft(GAME_DURATION); }}>Play</button>
+              <div className="menu-rewards">
+                <div className="gift"><button className="gift"><i className="fa-solid fa-gift">  Rewards</i> (coming soon)</button></div>
               </div>
             </div>
           )}
