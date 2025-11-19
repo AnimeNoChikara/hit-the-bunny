@@ -348,8 +348,7 @@ export default function App() {
             aria-haspopup="true"
             aria-expanded={isMenuOpen}
             aria-label="Open menu"
-          >
-            ☰
+          ><i className="fi fi-br-menu-burger"></i>
           </button>
 
           {/* profile avatar only in topbar */}
@@ -545,7 +544,9 @@ export default function App() {
           </div>
         </div>
       )}
-
+      <footer className="footer">
+        0.1.6
+      </footer>
     </div>
   );
 }

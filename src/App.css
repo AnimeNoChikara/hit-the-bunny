@@ -5,10 +5,11 @@
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #0b1120, #020617);
+  background: linear-gradient(135deg,#0bd1b7, #0b9bc6, #a70cad, #7f0ddc, #350a85);
   color: #f9fafb;
   justify-content: center;
   overflow: hidden;
+
 }
 
 .app {
@@ -40,6 +41,7 @@ body {
   align-items:center;
   gap:5px;
   position:relative;
+  left: 0%;
 }
 
 .menu-btn{
@@ -54,8 +56,11 @@ body {
   color:inherit;
   cursor:pointer;
   transition:transform .12s ease, background .12s ease;
+  padding: 0%;
+  outline: none;
 }
 .menu-btn.open{ background: rgba(255,255,255,0.02); transform:translateY(1px); }
+.menu-btn:focus{ outline:none; }
 
 .avatar-btn{ border:none; background:transparent; padding: 0; padding-top: 1%; cursor:pointer; }
 .top-avatar{
@@ -147,7 +152,6 @@ body {
   background-size: cover;
   border-radius: 18px;
   padding: 12px 14px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
   box-shadow: 0 12px 25px rgba(15, 23, 42, 0.6);
   margin-bottom: 14px;
 }
@@ -672,7 +676,7 @@ body {
 
 /* blur pada game area saat overlay aktif */
 .game-card.blurred {
-  filter: blur(6px);
+  filter: blur(1px);
   pointer-events: none;
 }
 
@@ -790,3 +794,8 @@ body {
   to   { transform: translateY(0) scale(1); opacity: 1; }
 }
 
+.footer {
+  text-align: center;
+  font-size: 1rem;
+  color: #6b7280;
+  font-family: cursive;}
