@@ -549,7 +549,7 @@ function App() {
             {countdown ? (
               <div className="countdown">{countdown}</div>
             ) : (
-              <div className="prestart-card">
+              <div>
                 <button className="primary-btn large" onClick={startSequence}>
                   Play game
                 </button>

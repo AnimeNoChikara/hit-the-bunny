@@ -570,13 +570,6 @@ body {
 }
 
 /* adaptasi card overlay */
-.prestart-card {
-  background: rgba(255,255,255,0.03);
-  padding: 18px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 8px 26px rgba(0,0,0,0.45);
-}
 
 /* Tombol besar untuk Play */
 .primary-btn.large {
