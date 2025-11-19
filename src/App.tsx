@@ -242,7 +242,18 @@ export default function App() {
   };
 
   const handleOpenLeaderboard = () => setIsLeaderboardOpen(true);
-  const handleCloseLeaderboard = () => setIsLeaderboardOpen(false);
+    // old: const handleCloseLeaderboard = () => setIsLeaderboardOpen(false);
+  const handleCloseLeaderboard = () => {
+    setIsLeaderboardOpen(false);
+
+    // Tampilkan overlay Play kembali agar user bisa langsung main lagi
+    setIsPreStartOpen(true);
+
+    // Bersihkan countdown kalau ada, dan reset waktu
+    setCountdown(null);
+    setTimeLeft(GAME_DURATION);
+  };
+
 
   const progressPercent = (timeLeft / GAME_DURATION) * 100;
 
