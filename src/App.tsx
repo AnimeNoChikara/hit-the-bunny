@@ -337,6 +337,8 @@ export default function App() {
     }
   };
 
+
+
   // ---------- render ----------
   return (
     <div className="app">
@@ -514,21 +516,33 @@ export default function App() {
 
                 <button
                   className="secondary-btn"
-                  onClick={() => {
-                    const text = `I scored ${scoreRef.current} in Hit The Bunny! 🎯`;
-                    if ((navigator as any).share) {
-                      (navigator as any).share({ title: "Hit The Bunny score", text }).catch(() => {});
-                    } else {
-                      navigator.clipboard?.writeText(text).then(() => {
-                        alert("Score copied to clipboard!");
-                      }).catch(() => {
-                        alert("Unable to share — copy manually: " + text);
-                      });
+                  onClick={async () => {
+                    try {
+                      const text = `I scored ${scoreRef.current} in Hit The Bunny! 🎯\nPlay: https://hit-the-bunny.vercel.app/`;
+                      const embeds = ["https://hit-the-bunny.vercel.app/"] as [string];
+                      const res = await sdk.actions.composeCast({ text, embeds });
+                      if (res?.cast) {
+                        alert("Cast posted! 🎉");
+                      } else {
+                        // user cancelled
+                        console.log("compose cancelled");
+                      }
+                    } catch (e) {
+                      console.error(e);
+                      // fallback: postMessage or copy text
+                      const fallbackText = `I scored ${scoreRef.current} in Hit The Bunny! 🎯 https://hit-the-bunny.vercel.app/`;
+                      try {
+                        window.parent.postMessage({ type: "createCast", data: { cast: { text: fallbackText } } }, "*");
+                      } catch {
+                        await navigator.clipboard.writeText(fallbackText);
+                        alert("Couldn't open composer — score copied to clipboard.");
+                      }
                     }
                   }}
                 >
                   Share
                 </button>
+
               </div>
             </div>
 
