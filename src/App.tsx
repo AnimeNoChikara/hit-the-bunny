@@ -5,6 +5,7 @@ import "./App.css";
 // Assets (make sure these exist in src/assets)
 import hitSfx from "./assets/hit.wav";
 import missSfx from "./assets/miss.mp3";
+import popSfx from "./assets/bunny-pop.mp3";
 import bunnyImg from "./assets/bunny.png";
 import avatarPlaceholder from "./assets/avatar-placeholder.png";
 
@@ -116,7 +117,7 @@ export default function App() {
 
       // init audio
       try {
-        bunnyPopRef.current = new Audio(hitSfx);
+        bunnyPopRef.current = new Audio(popSfx);
         if (bunnyPopRef.current) bunnyPopRef.current.volume = 0.5;
 
         hitRef.current = new Audio(hitSfx);
