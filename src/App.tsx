@@ -2,21 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
 import "./App.css";
 
-// ⚠️ Pastikan file audio ini ada di src/assets/
-// Atau ganti path/namanya kalau beda.
+// Assets (make sure these exist in src/assets)
 import hitSfx from "./assets/hit.wav";
 import missSfx from "./assets/miss.mp3";
 import bunnyImg from "./assets/bunny.png";
 
-// Kalau kamu sudah punya supabaseClient.ts, pakai import ini:
+// Supabase client (if used for leaderboard)
 import { supabase } from "./lib/supabaseClient";
 
-// ---------- Konstanta game ----------
+// ---------- Constants ----------
 const HOLES_COUNT = 9;
-const GAME_DURATION = 30; // detik
+const GAME_DURATION = 30; // seconds
 const BUNNY_INTERVAL = 700; // ms
 
-// ---------- Tipe data ----------
+// ---------- Types ----------
 type MiniAppUser = {
   fid: number;
   username?: string;
@@ -31,106 +30,60 @@ type LeaderboardEntry = {
   best_score: number;
 };
 
-// ---------- Komponen utama ----------
-function App() {
-  // State user Farcaster
+// ---------- Main component ----------
+export default function App() {
+  // --- user
   const [currentUser, setCurrentUser] = useState<MiniAppUser | null>(null);
 
-  // State game
+  // --- game state
   const [isPlaying, setIsPlaying] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [score, setScore] = useState(0);
   const [activeHole, setActiveHole] = useState<number | null>(null);
 
-  // Timer refs
+  // refs for timers
   const timerRef = useRef<number | null>(null);
   const bunnyRef = useRef<number | null>(null);
 
-  // Audio refs
+  // audio refs
   const bunnyPopRef = useRef<HTMLAudioElement | null>(null);
   const hitRef = useRef<HTMLAudioElement | null>(null);
   const missRef = useRef<HTMLAudioElement | null>(null);
 
-  // Leaderboard
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
-
-
-  // Congrat modal
-  const [isCongratsOpen, setIsCongratsOpen] = useState(false);
-
-
-
-  // Tambahkan ini:
-  const scoreRef = useRef(0);
+  // score ref (for reading latest value in async functions)
+  const scoreRef = useRef<number>(0);
   useEffect(() => {
     scoreRef.current = score;
   }, [score]);
-  
-    // Pre-start (overlay play + countdown)
-  const [isPreStartOpen, setIsPreStartOpen] = useState(true); // true kalau mau force login via miniapp dulu; ubah kalau mau
+
+  // --- leaderboard
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+
+  // --- pre-start & countdown
+  const [isPreStartOpen, setIsPreStartOpen] = useState(true);
   const [countdown, setCountdown] = useState<number | null>(null);
   const countdownRef = useRef<number | null>(null);
 
-  // start sequence: mulai countdown, lalu startGame
-  const startSequence = () => {
-    // jika user belum login jangan mulai
-    if (!currentUser) {
-      alert("Buka game ini lewat Farcaster/Base biar akunmu terbaca dulu 🟣");
-      return;
-    }
+  // --- congrats modal
+  const [isCongratsOpen, setIsCongratsOpen] = useState(false);
 
-    setCountdown(3);
-    // blur akan aktif ketika countdown !== null && countdown > 0
-    if (countdownRef.current) window.clearInterval(countdownRef.current);
-    countdownRef.current = window.setInterval(() => {
-      setCountdown((c) => {
-        if (!c) {
-          // safety
-          if (countdownRef.current) window.clearInterval(countdownRef.current);
-          return null;
-        }
-        if (c <= 1) {
-          // akhir countdown -> mulai game
-          if (countdownRef.current) window.clearInterval(countdownRef.current);
-          setCountdown(null);
-          setIsPreStartOpen(false);
-          // mulai game dengan reset
-          setScore(0);
-          setTimeLeft(GAME_DURATION);
-          setIsPlaying(true);
-          return null;
-        }
-        return c - 1;
-      });
-    }, 1000);
-  };
-
-
-
-  // ---------- INIT: miniapp + user + audio ----------
+  // ---------- INIT: sdk + user + audio ----------
   useEffect(() => {
-    const init = async () => {
-      console.log("[init] start");
+    let mounted = true;
 
-      // 1. Kasih sinyal ke host (Farcaster/Base) kalau UI siap.
+    const init = async () => {
       try {
         await sdk.actions.ready();
       } catch (e) {
-        console.warn(
-          "[init] sdk.actions.ready error (ini wajar kalau di localhost bukan miniapp):",
-          e
-        );
+        // normal when running locally
       }
 
-      // 2. Coba ambil context user kalau memang di dalam miniapp
       try {
         const inMiniApp = await sdk.isInMiniApp();
-        console.log("[init] isInMiniApp =", inMiniApp);
-
         if (inMiniApp) {
-          const context = await sdk.context; // Promise, jadi WAJIB di-await
-          if (context?.user?.fid) {
+          const context = await sdk.context;
+          if (context?.user?.fid && mounted) {
             const u = context.user as MiniAppUser;
             setCurrentUser({
               fid: u.fid,
@@ -138,31 +91,45 @@ function App() {
               displayName: u.displayName,
               pfpUrl: u.pfpUrl,
             });
-            console.log("[init] User dari Farcaster:", u);
-          } else {
-            console.log("[init] Context ada tapi user kosong");
           }
-        } else {
-          console.log("[init] Tidak berjalan di dalam Farcaster/Base miniapp (localhost mode)");
         }
       } catch (e) {
-        console.warn("[init] gagal ambil sdk.context:", e);
+        console.warn("[init] failed to get sdk.context:", e);
       }
 
-        // 3. Init audio (supaya tidak bikin error saat dipakai)
+      // init audio
+      try {
+        bunnyPopRef.current = new Audio(hitSfx);
+        if (bunnyPopRef.current) bunnyPopRef.current.volume = 0.5;
+
         hitRef.current = new Audio(hitSfx);
         if (hitRef.current) hitRef.current.volume = 0.8;
 
         missRef.current = new Audio(missSfx);
         if (missRef.current) missRef.current.volume = 0.4;
-
-        console.log("[init] done");
-      };
+      } catch (e) {
+        console.warn("[init] audio init failed", e);
+      }
+    };
 
     void init();
+
+    return () => {
+      mounted = false;
+      if (timerRef.current) window.clearInterval(timerRef.current);
+      if (bunnyRef.current) window.clearInterval(bunnyRef.current);
+      if (countdownRef.current) window.clearInterval(countdownRef.current);
+
+      [bunnyPopRef.current, hitRef.current, missRef.current].forEach((a) => {
+        try {
+          a?.pause();
+          a?.removeAttribute("src");
+        } catch {}
+      });
+    };
   }, []);
 
-  // ---------- Timer countdown (auto game over) ----------
+  // ---------- game timer (auto stop) ----------
   useEffect(() => {
     if (!isPlaying) return;
 
@@ -171,31 +138,19 @@ function App() {
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          void stopGame();  // 🟢 ini penting
+          void stopGame();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
-      return () => {
-        // cleanup jika component di-unmount
-        if (timerRef.current) window.clearInterval(timerRef.current);
-        if (bunnyRef.current) window.clearInterval(bunnyRef.current);
-        if (countdownRef.current) window.clearInterval(countdownRef.current);
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current);
+    };
+  }, [isPlaying]);
 
-        // pause audios
-        [bunnyPopRef.current, hitRef.current, missRef.current].forEach((a) => {
-          try {
-            a?.pause();
-            a?.removeAttribute("src");
-          } catch {}
-        });
-      };
-  }, [isPlaying]); // ini boleh tetap seperti ini
-
-
-  // ---------- Bunny bergerak ----------
+  // ---------- bunny movement ----------
   useEffect(() => {
     if (!isPlaying) return;
 
@@ -207,11 +162,7 @@ function App() {
 
       if (bunnyPopRef.current) {
         bunnyPopRef.current.currentTime = 0;
-        bunnyPopRef.current
-          .play()
-          .catch(() => {
-            // ignore autoplay error
-          });
+        void bunnyPopRef.current.play().catch(() => {});
       }
     }, BUNNY_INTERVAL);
 
@@ -220,16 +171,43 @@ function App() {
     };
   }, [isPlaying]);
 
-  // ---------- Supabase: load leaderboard saat modal dibuka ----------
+  // ---------- leaderboard (load when opened) ----------
   useEffect(() => {
     if (!isLeaderboardOpen) return;
     void refreshLeaderboard();
   }, [isLeaderboardOpen]);
 
-  // ---------- Actions game ----------
+  // ---------- start sequence (countdown -> start) ----------
+  const startSequence = () => {
+    if (!currentUser) {
+      alert("Open this game inside Farcaster/Base to have your account recognized 🟣");
+      return;
+    }
 
+    setCountdown(3);
+    if (countdownRef.current) window.clearInterval(countdownRef.current);
+
+    countdownRef.current = window.setInterval(() => {
+      setCountdown((c) => {
+        if (!c) return null;
+        if (c <= 1) {
+          if (countdownRef.current) window.clearInterval(countdownRef.current);
+          setCountdown(null);
+          setIsPreStartOpen(false);
+          // reset & start
+          setScore(0);
+          setTimeLeft(GAME_DURATION);
+          setIsPlaying(true);
+          return null;
+        }
+        return c - 1;
+      });
+    }, 1000);
+  };
+
+  // ---------- stop game (no reward UI) ----------
   const stopGame = async () => {
-    console.log("[stopGame] dipanggil, score (state):", scoreRef.current);
+    console.log("[stopGame] called, score (state):", scoreRef.current);
 
     setIsPlaying(false);
     setActiveHole(null);
@@ -239,13 +217,11 @@ function App() {
 
     await saveScoreToLeaderboard();
 
-    // Tampilkan overlay Play lagi supaya user bisa klik "Play game"
-    setCountdown(null);        // pastikan countdown dibersihkan
-    setIsPreStartOpen(true);
+    // Show professional congratulations modal
+    setIsCongratsOpen(true);
   };
 
-
-
+  // ---------- hole click ----------
   const handleHoleClick = (index: number) => {
     if (!isPlaying) return;
 
@@ -255,58 +231,45 @@ function App() {
 
       if (hitRef.current) {
         hitRef.current.currentTime = 0;
-        hitRef.current.play().catch(() => {});
+        void hitRef.current.play().catch(() => {});
       }
     } else {
       if (missRef.current) {
         missRef.current.currentTime = 0;
-        missRef.current.play().catch(() => {});
+        void missRef.current.play().catch(() => {});
       }
     }
   };
 
-  const handleOpenLeaderboard = () => {
-    setIsLeaderboardOpen(true);
-  };
-
-  const handleCloseLeaderboard = () => {
-    setIsLeaderboardOpen(false);
-  };
+  const handleOpenLeaderboard = () => setIsLeaderboardOpen(true);
+  const handleCloseLeaderboard = () => setIsLeaderboardOpen(false);
 
   const progressPercent = (timeLeft / GAME_DURATION) * 100;
 
-  // ---------- Supabase: leaderboard ----------
+  // ---------- Supabase: leaderboard helpers ----------
   const refreshLeaderboard = async () => {
-    console.log("[refreshLeaderboard] load leaderboard");
-    const { data, error } = await supabase
-      .from("leaderboard")
-      .select("fid, username, display_name, best_score")
-      .order("best_score", { ascending: false })
-      .limit(20);
+    try {
+      const { data, error } = await supabase
+        .from("leaderboard")
+        .select("fid, username, display_name, best_score")
+        .order("best_score", { ascending: false })
+        .limit(20);
 
-    if (error) {
-      console.error("[refreshLeaderboard] error:", error);
-      return;
+      if (error) {
+        console.error("[refreshLeaderboard] error:", error);
+        return;
+      }
+
+      setLeaderboard((data as LeaderboardEntry[]) || []);
+    } catch (e) {
+      console.error("[refreshLeaderboard] unexpected:", e);
     }
-
-    console.log("[refreshLeaderboard] data:", data);
-    setLeaderboard(data as LeaderboardEntry[]);
   };
 
   const saveScoreToLeaderboard = async () => {
-    const finalScore = scoreRef.current; // 🟢 ambil skor terbaru dari ref
-
-    console.log("[saveScoreToLeaderboard] mulai, user:", currentUser, "score:", finalScore);
-
-    if (!currentUser) {
-      console.warn("[saveScoreToLeaderboard] currentUser kosong → tidak simpan");
-      return;
-    }
-
-    if (finalScore <= 0) {
-      console.warn("[saveScoreToLeaderboard] score <= 0 → tidak simpan");
-      return;
-    }
+    const finalScore = scoreRef.current;
+    if (!currentUser) return;
+    if (finalScore <= 0) return;
 
     const fid = currentUser.fid;
     const username = currentUser.username ?? null;
@@ -320,22 +283,12 @@ function App() {
         .maybeSingle();
 
       if (fetchError) {
-        console.error("[saveScoreToLeaderboard] gagal baca leaderboard:", fetchError);
+        console.error("[saveScoreToLeaderboard] fetch error:", fetchError);
         return;
       }
 
       const existingBest = existing?.best_score ?? 0;
-      console.log(
-        "[saveScoreToLeaderboard] best lama:",
-        existingBest,
-        "score baru:",
-        finalScore
-      );
-
-      if (finalScore <= existingBest) {
-        console.log("[saveScoreToLeaderboard] score baru tidak lebih tinggi, skip update");
-        return;
-      }
+      if (finalScore <= existingBest) return;
 
       const { error: upsertError } = await supabase
         .from("leaderboard")
@@ -355,58 +308,43 @@ function App() {
         return;
       }
 
-      console.log("[saveScoreToLeaderboard] upsert sukses");
       await refreshLeaderboard();
     } catch (e) {
-      console.error("[saveScoreToLeaderboard] error tak terduga:", e);
+      console.error("[saveScoreToLeaderboard] unexpected:", e);
     }
   };
 
-
-
-    // ---------- UI ----------
+  // ---------- render ----------
   return (
     <div className="app">
       {/* Top bar */}
       <header className="top-bar">
-        
         <div className="player-row">
           {currentUser ? (
             <div className="player-info">
               <div className="player-name">
-                {currentUser.displayName ||
-                  currentUser.username ||
-                  `User #${currentUser.fid}`}
+                {currentUser.displayName || currentUser.username || `User #${currentUser.fid}`}
               </div>
-              <div className="player-handle">
-                @{currentUser.username ?? "unknown"} · fid {currentUser.fid}
-              </div>
+              <div className="player-handle">@{currentUser.username ?? "unknown"} · fid {currentUser.fid}</div>
             </div>
           ) : (
             <div className="player-info">
               <div className="player-name">Guest</div>
-              <div className="player-handle">
-                Jalankan di Farcaster/Base untuk auto login
-              </div>
+              <div className="player-handle">Open inside Farcaster/Base to auto-login</div>
             </div>
           )}
         </div>
-          
-        <button
-          className="trophy-btn"
-          onClick={handleOpenLeaderboard}
-          aria-label="Lihat leaderboard"
-        >
-          🏆
-        </button>
+
+        <button className="trophy-btn" onClick={handleOpenLeaderboard} aria-label="View leaderboard">🏆</button>
       </header>
 
-      {/* Panel info user + timer */}
+      {/* Panel info */}
       <section className="panel">
         <div className="top-left">
-          <h1 className="title"></h1>
-          <p className="subtitle"></p>
+          <h1 className="title">Hit the Bunny on the Hole</h1>
+          <p className="subtitle">Try to get your best score!</p>
         </div>
+
         <div className="info-bar">
           <div className="info-item">
             <span className="info-label">Time</span>
@@ -420,89 +358,69 @@ function App() {
 
         <div className="progress-wrapper">
           <div className="progress-track">
-            <div
-              className="progress-fill"
-              style={{ width: `${progressPercent}%` }}
-            />
+            <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
           </div>
         </div>
       </section>
 
+      {/* Game area wrapper: local overlay only covers game card */}
       <div className="game-area-wrapper">
-        <main className={`game-card ${ (countdown !== null && countdown > 0) || isPreStartOpen ? "blurred" : "" }`}>
+        <main className={`game-card ${((countdown !== null && countdown > 0) || isPreStartOpen) ? "blurred" : ""}`}>
           <div className="grid">
             {Array.from({ length: HOLES_COUNT }).map((_, index) => (
-            <button
+              <button
                 key={index}
                 className={`hole ${activeHole === index ? "active" : ""}`}
                 onClick={() => handleHoleClick(index)}
+                aria-label={`Hole ${index + 1}`}
               >
                 {activeHole === index && (
-                  <img
-                    src={bunnyImg}
-                    alt="Bunny"
-                    className="bunny bunny-in bunny-img"
-                    draggable={false}
-                  />
+                  <img src={bunnyImg} alt="Bunny" className="bunny bunny-in bunny-img" draggable={false} />
                 )}
               </button>
             ))}
           </div>
         </main>
 
-        {/* Overlay yang hanya menutupi game-card */}
+        {/* local overlay (only above game-card) */}
         {(isPreStartOpen || countdown) && (
-          <div className="prestart-overlay local">
-            {countdown ? (
-              <div className="countdown">{countdown}</div>
-            ) : (
-              <div>
-                <button className="primary-btn large" onClick={startSequence}>
-                  Start Game
-                </button>
-              </div>
-            )}
+          <div className="prestart-overlay local" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className={`prestart-card ${countdown ? "countdown-mode" : ""}`}>
+              {countdown ? (
+                <div className="countdown" aria-live="polite">{countdown}</div>
+              ) : (
+                <button className="primary-btn large" onClick={startSequence}>Play game</button>
+              )}
+            </div>
           </div>
-
         )}
       </div>
-      <div className="controls" aria-hidden={isPreStartOpen ? "true" : "false"}>
-      </div>
 
-        {!isPlaying && timeLeft === 0 && !isPreStartOpen && (
-          <p className="result-text">Game over! Skor kamu: {score}</p>
-        )}
+      {/* Controls: empty because overlay handles Play */}
+      <div className="controls" aria-hidden={isPreStartOpen ? "true" : "false"} />
 
-      {/* Modal leaderboard */}
+      {/* Result text (show when game is finished & overlay not covering) */}
+      {!isPlaying && timeLeft === 0 && !isPreStartOpen && (
+        <p className="result-text">Game over! Your score: {score}</p>
+      )}
+
+      {/* Leaderboard modal */}
       {isLeaderboardOpen && (
         <div className="modal-backdrop" onClick={handleCloseLeaderboard}>
-          <div
-            className="modal"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">Leaderboard 🏆</h2>
-              <button
-                className="modal-close"
-                onClick={handleCloseLeaderboard}
-                aria-label="Tutup leaderboard"
-              >
-                ✕
-              </button>
+              <button className="modal-close" onClick={handleCloseLeaderboard} aria-label="Close leaderboard">✕</button>
             </div>
 
             {leaderboard.length === 0 ? (
-              <p className="modal-empty">Belum ada skor. Jadilah yang pertama!</p>
+              <p className="modal-empty">No scores yet. Be the first!</p>
             ) : (
               <ul className="leaderboard-list">
-                {leaderboard.map((entry, index) => (
+                {leaderboard.map((entry, idx) => (
                   <li key={entry.fid} className="leaderboard-item">
-                    <span className="lb-rank">{index + 1}</span>
-                    <span className="lb-name">
-                      {entry.display_name || entry.username || `fid ${entry.fid}`}
-                    </span>
+                    <span className="lb-rank">{idx + 1}</span>
+                    <span className="lb-name">{entry.display_name || entry.username || `fid ${entry.fid}`}</span>
                     <span className="lb-score">{entry.best_score}</span>
                   </li>
                 ))}
@@ -512,48 +430,28 @@ function App() {
         </div>
       )}
 
-        {/* Modal Congrat (professional) */}
+      {/* Congratulations modal (professional) */}
       {isCongratsOpen && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setIsCongratsOpen(false)}
-          aria-modal="true"
-          role="dialog"
-        >
-          <div
-            className="congrats-modal"
-            onClick={(e) => e.stopPropagation()}
-            role="document"
-            aria-labelledby="congrats-title"
-          >
+        <div className="modal-backdrop" onClick={() => setIsCongratsOpen(false)} role="dialog" aria-modal="true">
+          <div className="congrats-modal" onClick={(e) => e.stopPropagation()} role="document" aria-labelledby="congrats-title">
             <div className="congrats-hero">
               <div className="congrats-trophy">🏆</div>
             </div>
 
             <div className="congrats-body">
-              <h2 id="congrats-title" className="congrats-title">
-                Selamat! Kamu Menang 🎉
-              </h2>
-              <p className="congrats-sub">
-                Permainan selesai — skor akhir kamu:
-              </p>
+              <h2 id="congrats-title" className="congrats-title">Congratulations! You did it 🎉</h2>
+              <p className="congrats-sub">The round is over — your final score:</p>
 
-              <div className="congrats-score" aria-live="polite">
-                {scoreRef.current}
-              </div>
+              <div className="congrats-score" aria-live="polite">{scoreRef.current}</div>
 
-              <p className="congrats-note">
-                Kerja bagus!
-              </p>
+              <p className="congrats-note">Great job! Try again to beat your record — or check the leaderboard.</p>
 
               <div className="congrats-actions">
                 <button
                   className="primary-btn"
                   onClick={() => {
                     setIsCongratsOpen(false);
-                    // buka overlay play lagi
                     setIsPreStartOpen(true);
-                    // reset timeLeft supaya overlay menyajikan Play game
                     setTimeLeft(GAME_DURATION);
                   }}
                 >
@@ -567,55 +465,34 @@ function App() {
                     setIsLeaderboardOpen(true);
                   }}
                 >
-                  Lihat leaderboard
+                  View leaderboard
                 </button>
 
                 <button
                   className="secondary-btn"
                   onClick={() => {
-                    // Share score jika browser support
-                    const text = `Aku mendapatkan skor ${scoreRef.current} di Hit The Bunny! 🎯`;
-                    if (navigator.share) {
-                      navigator.share({ title: "Skor Hit The Bunny", text }).catch(()=>{});
+                    const text = `I scored ${scoreRef.current} in Hit The Bunny! 🎯`;
+                    if ((navigator as any).share) {
+                      (navigator as any).share({ title: "Hit The Bunny score", text }).catch(() => {});
                     } else {
-                      // fallback: copy to clipboard
-                      navigator.clipboard?.writeText(text).then(()=> {
-                        alert("Skor disalin ke clipboard!");
-                      }).catch(()=> {
-                        alert("Tidak bisa membagikan — salin manual: " + text);
+                      navigator.clipboard?.writeText(text).then(() => {
+                        alert("Score copied to clipboard!");
+                      }).catch(() => {
+                        alert("Unable to share — copy manually: " + text);
                       });
                     }
                   }}
-                  title="Bagikan skor"
                 >
-                  Bagikan
+                  Share
                 </button>
               </div>
             </div>
 
-            <button
-              className="modal-close"
-              aria-label="Tutup ucapan selamat"
-              onClick={() => setIsCongratsOpen(false)}
-            >
-              ✕
-            </button>
+            <button className="modal-close" aria-label="Close congratulations" onClick={() => setIsCongratsOpen(false)}>✕</button>
           </div>
         </div>
       )}
 
-      {/* Modal reward (sementara digabung di congrat modal) */}
-      {/* <button
-        className="secondary-btn"
-        onClick={() => {
-          setIsRewardModalOpen(false);
-          // buka panel wallet / claim
-        }}>
-        Lihat Dompet BUNNY
-      </button> */}
-
     </div>
   );
 }
-
-export default App;
