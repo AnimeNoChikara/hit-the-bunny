@@ -398,11 +398,6 @@ export default function App() {
 
       {/* Panel info */}
       <section className="panel">
-        <div className="top-left">
-          <h1 className="title">Hit the Bunny on the Hole</h1>
-          <p className="subtitle">Try to get your best score!</p>
-        </div>
-
         <div className="info-bar">
           <div className="info-item">
             <span className="info-label">Time</span>
