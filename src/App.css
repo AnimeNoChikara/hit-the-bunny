@@ -591,8 +591,15 @@ body {
   font-weight: 800;
   color: #fff;
   text-shadow: 0 8px 22px rgba(0,0,0,0.6);
-  border: none;
 }
+
+.countdown {
+  border: none ;
+  background: transparent ;
+  outline: none ;
+  box-shadow: none ;
+}
+
 
 /* blur pada game area saat overlay aktif */
 .game-card.blurred {
