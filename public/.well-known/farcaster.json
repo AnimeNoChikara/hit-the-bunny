@@ -15,15 +15,15 @@
     "subtitle": "Tap Before It Hides!",
     "description": "Hit the Bunny on the Hole is a fast reaction game where you tap the bunny as it pops out of the hole. Stay focused, react quickly, and collect as many points as possible. Try to beat your best score and enjoy the challenge.",
     "screenshotUrls": [
-      "hit-the-bunny.vercel.app/s1.png"
+      "https://hit-the-bunny.vercel.app/s1.png"
     ],
     "primaryCategory": "game",
     "tags": ["game", "bunny", "miniapp", "fun", "frame", "$bunny", "meme"],
-    "heroImageUrl": "hit-the-bunny.vercel.app/og.png",
+    "heroImageUrl": "https://hit-the-bunny.vercel.app/hero.png",
     "tagline": "Hit the bunny, climb the leaderboard",
     "ogTitle": "Hit The Bunny On The Hole",
     "ogDescription": "Play a bunny whack game with your frens onchain.",
-    "ogImageUrl": "hit-the-bunny.vercel.app/og.png",
+    "ogImageUrl": "https://hit-the-bunny.vercel.app/og.png",
     "noindex": false
   }
 }
