@@ -336,7 +336,12 @@ function App() {
 
     await saveScoreToLeaderboard();
     await grantRewardForGame();       // beri reward & popup
+
+    // Tampilkan overlay Play lagi supaya user bisa klik "Play game"
+    setCountdown(null);        // pastikan countdown dibersihkan
+    setIsPreStartOpen(true);
   };
+
 
 
   const handleHoleClick = (index: number) => {
@@ -559,19 +564,13 @@ function App() {
 
         )}
       </div>
-
-    {/* Controls: hanya show Play Again ketika game over */}
-      <div className="controls">
-        {!isPlaying && timeLeft !== GAME_DURATION && timeLeft === 0 && (
-          <button className="primary-btn" onClick={() => { setIsPreStartOpen(true); setTimeLeft(GAME_DURATION); }}>
-            Play Again
-          </button>
-        )}
+      <div className="controls" aria-hidden={isPreStartOpen ? "true" : "false"}>
       </div>
 
-        {!isPlaying && timeLeft === 0 && (
+        {!isPlaying && timeLeft === 0 && !isPreStartOpen && (
           <p className="result-text">Game over! Skor kamu: {score}</p>
         )}
+
       {/* Modal leaderboard */}
       {isLeaderboardOpen && (
         <div className="modal-backdrop" onClick={handleCloseLeaderboard}>
