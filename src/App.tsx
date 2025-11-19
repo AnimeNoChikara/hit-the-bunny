@@ -545,17 +545,18 @@ function App() {
 
         {/* Overlay yang hanya menutupi game-card */}
         {(isPreStartOpen || countdown) && (
-          <div className="prestart-overlay local" onClick={(e) => e.stopPropagation()}>
-            <div className="prestart-card">
-              {countdown ? (
-                <div className="countdown" aria-live="polite">{countdown}</div>
-              ) : (
+          <div className="prestart-overlay local">
+            {countdown ? (
+              <div className="countdown">{countdown}</div>
+            ) : (
+              <div className="prestart-card">
                 <button className="primary-btn large" onClick={startSequence}>
                   Play game
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
+
         )}
       </div>
 
