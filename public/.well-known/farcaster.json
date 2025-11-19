@@ -6,7 +6,7 @@
   },
   "miniapp": {
     "version": "1",
-    "name": "Hit The Bunny in The Hole",
+    "name": "Whack a Bunny",
     "homeUrl": "https://hit-the-bunny.vercel.app",
     "iconUrl": "https://hit-the-bunny.vercel.app/icon.png",
     "splashImageUrl": "https://hit-the-bunny.vercel.app/splash.png",
@@ -15,7 +15,7 @@
     "subtitle": "Tap Before It Hides!",
     "description": "A fast reaction game where you tap the bunny before it hides. Stay alert and score as many points as you can.",
     "screenshotUrls": [
-      "https://hit-the-bunny.vercel.app/s1.png"
+      "https://hit-the-bunny.vercel.app/Screenshot1.png"
     ],
     "primaryCategory": "games",
     "tags": ["game,fun,meme,reward"],
