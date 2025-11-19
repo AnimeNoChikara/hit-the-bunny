@@ -55,8 +55,6 @@ function App() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
-  // Reward BUNNY (offchain)
-  const [unclaimedPoints, setUnclaimedPoints] = useState(0);
 
   // Congrat modal
   const [isCongratsOpen, setIsCongratsOpen] = useState(false);
@@ -68,101 +66,7 @@ function App() {
   useEffect(() => {
     scoreRef.current = score;
   }, [score]);
-  //------------ Supabase: grant reward ----------
-  const grantRewardForGame = async () => {
-    if (!currentUser) {
-      console.warn("[grantRewardForGame] no user, skip");
-      return;
-    }
-
-    const finalScore = scoreRef.current;
-    if (finalScore <= 0) {
-      console.log("[grantRewardForGame] score 0, tidak ada reward");
-      return;
-    }
-
-    const points = calcRewardPointsFromScore(finalScore);
-    const fid = currentUser.fid;
-    const username = currentUser.username ?? null;
-    const displayName = currentUser.displayName ?? null;
-
-    try {
-      // Baca dulu row kalau ada
-      const { data: existingRow, error: fetchError } = await supabase
-        .from("player_rewards")
-        .select("unclaimed_points, total_earned")
-        .eq("fid", fid)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error("[grantRewardForGame] fetch existing error:", fetchError);
-        return;
-      }
-
-      const newUnclaimed = (existingRow?.unclaimed_points ?? 0) + points;
-      const newTotalEarned = (existingRow?.total_earned ?? 0) + points;
-
-      const { error: upsertErr } = await supabase
-        .from("player_rewards")
-        .upsert(
-          {
-            fid,
-            username,
-            display_name: displayName,
-            unclaimed_points: newUnclaimed,
-            total_earned: newTotalEarned,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "fid" }
-        );
-
-      if (upsertErr) {
-        console.error("[grantRewardForGame] upsert error:", upsertErr);
-        return;
-      }
-
-      setUnclaimedPoints(newUnclaimed);
-
-      // log event
-      await supabase.from("reward_events").insert({
-        fid,
-        points,
-        score: finalScore,
-      });
-    } catch (e) {
-      console.error("[grantRewardForGame] unexpected error:", e);
-    }
-  };
-
-
-  // ---------- Supabase: rewards ----------
-  const refreshRewards = async () => {
-    if (!currentUser) return;
-
-    const { data, error } = await supabase
-      .from("player_rewards")
-      .select("unclaimed_points, total_earned, total_claimed")
-      .eq("fid", currentUser.fid)
-      .maybeSingle();
-
-    if (error) {
-      console.warn("[refreshRewards] error:", error);
-      return;
-    }
-
-    if (data) {
-      setUnclaimedPoints(data.unclaimed_points ?? 0);
-    } else {
-      setUnclaimedPoints(0);
-    }
-  };
-
-  const calcRewardPointsFromScore = (finalScore: number) => {
-    // bebas: misal 10 BUNNY point per 1 skor
-    return finalScore * 10;
-  };
   
-
     // Pre-start (overlay play + countdown)
   const [isPreStartOpen, setIsPreStartOpen] = useState(true); // true kalau mau force login via miniapp dulu; ubah kalau mau
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -234,7 +138,6 @@ function App() {
               displayName: u.displayName,
               pfpUrl: u.pfpUrl,
             });
-            await refreshRewards();
             console.log("[init] User dari Farcaster:", u);
           } else {
             console.log("[init] Context ada tapi user kosong");
@@ -335,7 +238,6 @@ function App() {
     if (bunnyRef.current) window.clearInterval(bunnyRef.current);
 
     await saveScoreToLeaderboard();
-    await grantRewardForGame();       // beri reward & popup
 
     // Tampilkan overlay Play lagi supaya user bisa klik "Play game"
     setCountdown(null);        // pastikan countdown dibersihkan

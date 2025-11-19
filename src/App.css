@@ -607,3 +607,118 @@ body {
   filter: blur(6px);
   pointer-events: none;
 }
+
+/* Congrat modal: professional look */
+.congrats-modal {
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  border-radius: 18px;
+  padding: 18px 18px 22px;
+  box-shadow: 0 30px 60px rgba(2,6,23,0.75), inset 0 1px 0 rgba(255,255,255,0.02);
+  border: 1px solid rgba(148,163,184,0.12);
+  position: relative;
+  animation: congrats-pop 260ms cubic-bezier(.2,.9,.25,1);
+}
+
+/* hero strip */
+.congrats-hero {
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  background: linear-gradient(120deg, rgba(34,197,94,0.12), rgba(13,155,220,0.06));
+  border-radius: 12px;
+}
+
+/* trophy big */
+.congrats-trophy {
+  font-size: 2.8rem;
+  transform: translateY(2px);
+  filter: drop-shadow(0 10px 28px rgba(2,6,23,0.7));
+}
+
+/* body */
+.congrats-body {
+  text-align: center;
+  padding: 6px 2px 2px;
+}
+
+.congrats-title {
+  margin: 6px 0 4px;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.congrats-sub {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+/* prominent score badge */
+.congrats-score {
+  display: inline-block;
+  min-width: 120px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: #022c22;
+  background: linear-gradient(90deg, #66f0a1, #2bb8e8);
+  box-shadow: 0 10px 30px rgba(12, 128, 82, 0.18), inset 0 -6px 18px rgba(255,255,255,0.06);
+  margin: 8px 0 10px;
+}
+
+/* short note */
+.congrats-note {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+}
+
+/* actions */
+.congrats-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+
+.secondary-btn {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(15,23,42,0.85);
+  border: 1px solid rgba(148,163,184,0.08);
+  color: #e6eef6;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+}
+
+/* close X (reuse modal-close but ensure visible) */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(15,23,42,0.7);
+  border: 1px solid rgba(255,255,255,0.03);
+  color: #e6eef6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+/* pop animation */
+@keyframes congrats-pop {
+  from { transform: translateY(8px) scale(0.98); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
