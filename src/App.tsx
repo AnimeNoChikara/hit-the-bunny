@@ -6,6 +6,7 @@ import "./App.css";
 import hitSfx from "./assets/hit.wav";
 import missSfx from "./assets/miss.mp3";
 import bunnyImg from "./assets/bunny.png";
+import avatarPlaceholder from "./assets/avatar-placeholder.png";
 
 // Supabase client (if used for leaderboard)
 import { supabase } from "./lib/supabaseClient";
@@ -67,6 +68,22 @@ export default function App() {
 
   // --- congrats modal
   const [isCongratsOpen, setIsCongratsOpen] = useState(false);
+
+  // --- navbar / menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // close menu when clicking outside
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!isMenuOpen) return;
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [isMenuOpen]);
 
   // ---------- INIT: sdk + user + audio ----------
   useEffect(() => {
@@ -242,18 +259,12 @@ export default function App() {
   };
 
   const handleOpenLeaderboard = () => setIsLeaderboardOpen(true);
-    // old: const handleCloseLeaderboard = () => setIsLeaderboardOpen(false);
   const handleCloseLeaderboard = () => {
     setIsLeaderboardOpen(false);
-
-    // Tampilkan overlay Play kembali agar user bisa langsung main lagi
     setIsPreStartOpen(true);
-
-    // Bersihkan countdown kalau ada, dan reset waktu
     setCountdown(null);
     setTimeLeft(GAME_DURATION);
   };
-
 
   const progressPercent = (timeLeft / GAME_DURATION) * 100;
 
@@ -328,29 +339,70 @@ export default function App() {
   // ---------- render ----------
   return (
     <div className="app">
-      {/* Top bar */}
+      {/* Navbar / Top bar */}
       <header className="top-bar">
-        <div className="player-row">
-          {currentUser ? (
-            <div className="player-info">
-              <div className="player-name">
-                {currentUser.displayName || currentUser.username || `User #${currentUser.fid}`}
+        <div className="nav-left" ref={menuRef}>
+          <button
+            className={`menu-btn ${isMenuOpen ? "open" : ""}`}
+            onClick={() => setIsMenuOpen((s) => !s)}
+            aria-haspopup="true"
+            aria-expanded={isMenuOpen}
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
+
+          {/* profile avatar only in topbar */}
+          <button
+            className="avatar-btn"
+            onClick={() => setIsMenuOpen((s) => !s)}
+            aria-label="Open profile menu"
+          >
+            <img
+              src={currentUser?.pfpUrl ?? avatarPlaceholder}
+              alt={currentUser?.displayName ?? currentUser?.username ?? "Profile"}
+              className="top-avatar"
+              onError={(e) => ((e.target as HTMLImageElement).src = avatarPlaceholder)}
+            />
+          </button>
+
+          {/* dropdown menu (shows when isMenuOpen) */}
+          {isMenuOpen && (
+            <div className="menu-dropdown" role="menu">
+              <div className="profile-card">
+                <img
+                  src={currentUser?.pfpUrl ?? avatarPlaceholder}
+                  alt={currentUser?.displayName ?? currentUser?.username ?? "Profile"}
+                  className="menu-avatar"
+                  onError={(e) => ((e.target as HTMLImageElement).src = avatarPlaceholder)}
+                />
+                <div className="profile-info">
+                  <div className="profile-name">{currentUser?.displayName ?? currentUser?.username ?? "Guest"}</div>
+                  <div className="profile-handle">{currentUser?.username ? `@${currentUser.username}` : "@guest"}</div>
+                  <div className="profile-fid">fid {currentUser?.fid ?? "-"}</div>
+                </div>
               </div>
-              <div className="player-handle">@{currentUser.username ?? "unknown"} · fid {currentUser.fid}</div>
-            </div>
-          ) : (
-            <div className="player-info">
-              <div className="player-name">Guest</div>
-              <div className="player-handle">Open inside Farcaster/Base to auto-login</div>
+
+              <div className="menu-actions">
+                <button className="secondary-btn" onClick={() => { setIsMenuOpen(false); setIsLeaderboardOpen(true); }}>View leaderboard</button>
+                <button className="secondary-btn" onClick={() => { setIsMenuOpen(false); setIsPreStartOpen(true); setCountdown(null); setTimeLeft(GAME_DURATION); }}>Play</button>
+              </div>
             </div>
           )}
         </div>
 
-        <button className="trophy-btn" onClick={handleOpenLeaderboard} aria-label="View leaderboard">🏆</button>
+        <div className="nav-right">
+          <button className="trophy-btn" onClick={handleOpenLeaderboard} aria-label="View leaderboard">🏆</button>
+        </div>
       </header>
 
       {/* Panel info */}
       <section className="panel">
+        <div className="top-left">
+          <h1 className="title">Hit the Bunny on the Hole</h1>
+          <p className="subtitle">Try to get your best score!</p>
+        </div>
+
         <div className="info-bar">
           <div className="info-item">
             <span className="info-label">Time</span>
