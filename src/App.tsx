@@ -55,7 +55,7 @@ function App() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
-    // Reward BUNNY (offchain)
+  // Reward BUNNY (offchain)
   const [lastRewardPoints, setLastRewardPoints] = useState(0);
   const [unclaimedPoints, setUnclaimedPoints] = useState(0);
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
@@ -85,39 +85,45 @@ function App() {
     const displayName = currentUser.displayName ?? null;
 
     try {
-      // Update player_rewards
-      const { data, error } = await supabase
+      // Baca dulu row kalau ada
+      const { data: existingRow, error: fetchError } = await supabase
+        .from("player_rewards")
+        .select("unclaimed_points, total_earned")
+        .eq("fid", fid)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error("[grantRewardForGame] fetch existing error:", fetchError);
+        return;
+      }
+
+      const newUnclaimed = (existingRow?.unclaimed_points ?? 0) + points;
+      const newTotalEarned = (existingRow?.total_earned ?? 0) + points;
+
+      const { error: upsertErr } = await supabase
         .from("player_rewards")
         .upsert(
           {
             fid,
             username,
             display_name: displayName,
-            // tambahkan ke unclaimed & total_earned
-            unclaimed_points: (unclaimedPoints || 0) + points,
-            total_earned: points, // akan kita adjust di bawah
+            unclaimed_points: newUnclaimed,
+            total_earned: newTotalEarned,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "fid" }
-        )
-        .select("unclaimed_points, total_earned")
-        .single();
+        );
 
-      if (error) {
-        console.error("[grantRewardForGame] upsert player_rewards error:", error);
+      if (upsertErr) {
+        console.error("[grantRewardForGame] upsert error:", upsertErr);
         return;
       }
 
-      // Lebih rapi: pakai RPC / trigger untuk increment,
-      // tapi untuk contoh simple kita bisa lakukan cara lain:
-      // Alternatif yang lebih aman: fetch dulu row sekarang, lalu hitung manual dan upsert.
-      // Di sini supaya pendek, kita asumsikan unclaimedPoints state sudah up to date.
-
       setLastRewardPoints(points);
-      setUnclaimedPoints(data.unclaimed_points ?? (unclaimedPoints + points));
+      setUnclaimedPoints(newUnclaimed);
       setIsRewardModalOpen(true);
 
-      // Opsional: log event per game
+      // log event
       await supabase.from("reward_events").insert({
         fid,
         points,
@@ -127,6 +133,7 @@ function App() {
       console.error("[grantRewardForGame] unexpected error:", e);
     }
   };
+
 
   // ---------- Supabase: rewards ----------
   const refreshRewards = async () => {
@@ -155,6 +162,45 @@ function App() {
     return finalScore * 10;
   };
   
+
+    // Pre-start (overlay play + countdown)
+  const [isPreStartOpen, setIsPreStartOpen] = useState(true); // true kalau mau force login via miniapp dulu; ubah kalau mau
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const countdownRef = useRef<number | null>(null);
+
+  // start sequence: mulai countdown, lalu startGame
+  const startSequence = () => {
+    // jika user belum login jangan mulai
+    if (!currentUser) {
+      alert("Buka game ini lewat Farcaster/Base biar akunmu terbaca dulu 🟣");
+      return;
+    }
+
+    setCountdown(3);
+    // blur akan aktif ketika countdown !== null && countdown > 0
+    if (countdownRef.current) window.clearInterval(countdownRef.current);
+    countdownRef.current = window.setInterval(() => {
+      setCountdown((c) => {
+        if (!c) {
+          // safety
+          if (countdownRef.current) window.clearInterval(countdownRef.current);
+          return null;
+        }
+        if (c <= 1) {
+          // akhir countdown -> mulai game
+          if (countdownRef.current) window.clearInterval(countdownRef.current);
+          setCountdown(null);
+          setIsPreStartOpen(false);
+          // mulai game dengan reset
+          setScore(0);
+          setTimeLeft(GAME_DURATION);
+          setIsPlaying(true);
+          return null;
+        }
+        return c - 1;
+      });
+    }, 1000);
+  };
 
 
 
@@ -200,15 +246,15 @@ function App() {
         console.warn("[init] gagal ambil sdk.context:", e);
       }
 
-      // 3. Init audio (supaya tidak bikin error saat dipakai)
-      hitRef.current = new Audio(hitSfx);
-      if (hitRef.current) hitRef.current.volume = 0.8;
+        // 3. Init audio (supaya tidak bikin error saat dipakai)
+        hitRef.current = new Audio(hitSfx);
+        if (hitRef.current) hitRef.current.volume = 0.8;
 
-      missRef.current = new Audio(missSfx);
-      if (missRef.current) missRef.current.volume = 0.4;
+        missRef.current = new Audio(missSfx);
+        if (missRef.current) missRef.current.volume = 0.4;
 
-      console.log("[init] done");
-    };
+        console.log("[init] done");
+      };
 
     void init();
   }, []);
@@ -229,9 +275,20 @@ function App() {
       });
     }, 1000);
 
-    return () => {
-      if (timerRef.current) window.clearInterval(timerRef.current);
-    };
+      return () => {
+        // cleanup jika component di-unmount
+        if (timerRef.current) window.clearInterval(timerRef.current);
+        if (bunnyRef.current) window.clearInterval(bunnyRef.current);
+        if (countdownRef.current) window.clearInterval(countdownRef.current);
+
+        // pause audios
+        [bunnyPopRef.current, hitRef.current, missRef.current].forEach((a) => {
+          try {
+            a?.pause();
+            a?.removeAttribute("src");
+          } catch {}
+        });
+      };
   }, [isPlaying]); // ini boleh tetap seperti ini
 
 
@@ -267,16 +324,6 @@ function App() {
   }, [isLeaderboardOpen]);
 
   // ---------- Actions game ----------
-  const startGame = () => {
-    if (!currentUser) {
-      alert("Buka game ini lewat Farcaster/Base biar akunmu terbaca dulu 🟣");
-      return;
-    }
-
-    setScore(0);
-    setTimeLeft(GAME_DURATION);
-    setIsPlaying(true);
-  };
 
   const stopGame = async () => {
     console.log("[stopGame] dipanggil, score (state):", scoreRef.current);
@@ -474,8 +521,23 @@ function App() {
         </div>
       </section>
 
+
       {/* Kartu game */}
       <main className="game-card">
+        {/* Pre-start overlay: tombol Play center & countdown */}
+        {isPreStartOpen && (
+          <div className="prestart-overlay" onClick={() => { /* prevent click-through */ }}>
+            <div className="prestart-card">
+              {countdown ? (
+                <div className="countdown">{countdown}</div>
+              ) : (
+                <button className="primary-btn large" onClick={startSequence}>
+                  Play game
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         <div className="grid">
           {Array.from({ length: HOLES_COUNT }).map((_, index) => (
            <button
@@ -494,21 +556,19 @@ function App() {
             </button>
           ))}
         </div>
-
-        {/* Hanya tombol Mulai/Main Lagi, tidak ada tombol Selesai */}
-        <div className="controls">
-          {!isPlaying && (
-            <button className="primary-btn" onClick={startGame}>
-              {timeLeft === 0 ? "Play Again" : "Play game"}
-            </button>
-          )}
-        </div>
+      </main>
+    {/* Controls: hanya show Play Again ketika game over */}
+      <div className="controls">
+        {!isPlaying && timeLeft !== GAME_DURATION && timeLeft === 0 && (
+          <button className="primary-btn" onClick={() => { setIsPreStartOpen(true); setTimeLeft(GAME_DURATION); }}>
+            Play Again
+          </button>
+        )}
+      </div>
 
         {!isPlaying && timeLeft === 0 && (
           <p className="result-text">Game over! Skor kamu: {score}</p>
         )}
-      </main>
-
       {/* Modal leaderboard */}
       {isLeaderboardOpen && (
         <div className="modal-backdrop" onClick={handleCloseLeaderboard}>

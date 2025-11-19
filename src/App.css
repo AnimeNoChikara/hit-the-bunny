@@ -247,8 +247,19 @@ body {
   display: flex;
   gap: 12px;
   margin-bottom: 8px;
+  padding-top: 5%;
+  align-items: center;
+  justify-content: center;
 }
 
+.controls {
+  outline: none;
+}
+.controls:focus,
+.controls:active {
+  outline: none;
+  box-shadow: none;
+}
 .primary-btn,
 .secondary-btn {
   padding: 10px 24px;
@@ -521,3 +532,50 @@ body {
   margin: 0 0 8px;
   font-size: 0.9rem;
 }
+
+/* overlay center */
+.prestart-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,0.35);
+  z-index: 60;
+}
+
+.prestart-card {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(6px);
+  border-radius: 12px;
+  padding: 28px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+}
+
+/* big button variant */
+.primary-btn.large {
+  font-size: 1.25rem;
+  padding: 14px 28px;
+  border-radius: 12px;
+}
+
+/* countdown big number */
+.countdown {
+  font-size: 4.5rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 6px 20px rgba(0,0,0,0.6);
+}
+
+/* blur game area when prestart/countdown active */
+.game-card.blurred,
+.game-card.blurred * {
+  filter: blur(6px);
+  pointer-events: none; /* menghindari klik pada holes saat prestart */
+}
+
+/* pastikan overlay di atas game */
+.prestart-overlay { pointer-events: auto; }
+
+/* jika kamu mau tombol play center fixed tetapi tanpa overlay penuh:
+   ubah .prestart-overlay background jadi transparent */
