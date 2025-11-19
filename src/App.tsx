@@ -56,9 +56,11 @@ function App() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
   // Reward BUNNY (offchain)
-  const [lastRewardPoints, setLastRewardPoints] = useState(0);
   const [unclaimedPoints, setUnclaimedPoints] = useState(0);
-  const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+
+  // Congrat modal
+  const [isCongratsOpen, setIsCongratsOpen] = useState(false);
+
 
 
   // Tambahkan ini:
@@ -119,9 +121,7 @@ function App() {
         return;
       }
 
-      setLastRewardPoints(points);
       setUnclaimedPoints(newUnclaimed);
-      setIsRewardModalOpen(true);
 
       // log event
       await supabase.from("reward_events").insert({
@@ -556,7 +556,7 @@ function App() {
             ) : (
               <div>
                 <button className="primary-btn large" onClick={startSequence}>
-                  Play game
+                  Start Game
                 </button>
               </div>
             )}
@@ -609,46 +609,100 @@ function App() {
           </div>
         </div>
       )}
-      {isRewardModalOpen && (
-      <div
-        className="modal-backdrop"
-        onClick={() => setIsRewardModalOpen(false)}
-      >
+
+        {/* Modal Congrat (professional) */}
+      {isCongratsOpen && (
         <div
-          className="modal"
-          onClick={(e) => e.stopPropagation()}
+          className="modal-backdrop"
+          onClick={() => setIsCongratsOpen(false)}
+          aria-modal="true"
+          role="dialog"
         >
-          <div className="modal-header">
-            <h2 className="modal-title">Selamat! 🎉</h2>
+          <div
+            className="congrats-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="document"
+            aria-labelledby="congrats-title"
+          >
+            <div className="congrats-hero">
+              <div className="congrats-trophy">🏆</div>
+            </div>
+
+            <div className="congrats-body">
+              <h2 id="congrats-title" className="congrats-title">
+                Selamat! Kamu Menang 🎉
+              </h2>
+              <p className="congrats-sub">
+                Permainan selesai — skor akhir kamu:
+              </p>
+
+              <div className="congrats-score" aria-live="polite">
+                {scoreRef.current}
+              </div>
+
+              <p className="congrats-note">
+                Kerja bagus!
+              </p>
+
+              <div className="congrats-actions">
+                <button
+                  className="primary-btn"
+                  onClick={() => {
+                    setIsCongratsOpen(false);
+                    // buka overlay play lagi
+                    setIsPreStartOpen(true);
+                    // reset timeLeft supaya overlay menyajikan Play game
+                    setTimeLeft(GAME_DURATION);
+                  }}
+                >
+                  Play again
+                </button>
+
+                <button
+                  className="secondary-btn"
+                  onClick={() => {
+                    setIsCongratsOpen(false);
+                    setIsLeaderboardOpen(true);
+                  }}
+                >
+                  Lihat leaderboard
+                </button>
+
+                <button
+                  className="secondary-btn"
+                  onClick={() => {
+                    // Share score jika browser support
+                    const text = `Aku mendapatkan skor ${scoreRef.current} di Hit The Bunny! 🎯`;
+                    if (navigator.share) {
+                      navigator.share({ title: "Skor Hit The Bunny", text }).catch(()=>{});
+                    } else {
+                      // fallback: copy to clipboard
+                      navigator.clipboard?.writeText(text).then(()=> {
+                        alert("Skor disalin ke clipboard!");
+                      }).catch(()=> {
+                        alert("Tidak bisa membagikan — salin manual: " + text);
+                      });
+                    }
+                  }}
+                  title="Bagikan skor"
+                >
+                  Bagikan
+                </button>
+              </div>
+            </div>
+
             <button
               className="modal-close"
-              onClick={() => setIsRewardModalOpen(false)}
+              aria-label="Tutup ucapan selamat"
+              onClick={() => setIsCongratsOpen(false)}
             >
               ✕
             </button>
           </div>
-
-          <p className="modal-text">
-            Kamu baru saja mendapatkan{" "}
-            <strong>{lastRewardPoints}</strong> BUNNY points dari skor game ini!
-          </p>
-          <p className="modal-text">
-            Total BUNNY points yang belum kamu klaim:{" "}
-            <strong>{unclaimedPoints}</strong>
-          </p>
-
-          <button
-            className="primary-btn"
-            onClick={() => {
-              setIsRewardModalOpen(false);
-              // nanti di sini bisa buka panel "Wallet" atau tab claim
-            }}
-          >
-            Keren! ✨
-          </button>
         </div>
-      </div>
-    )}
+      )}
+
+      {/* Modal reward (sementara digabung di congrat modal) */}
       {/* <button
         className="secondary-btn"
         onClick={() => {

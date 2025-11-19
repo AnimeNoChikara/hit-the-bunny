@@ -18,6 +18,8 @@ body {
   padding: 20px 16px 32px;
   max-width: 480px;
   margin: 0 auto;
+  background-image: url(./assets/bg3.png);
+  background-size: cover;
 }
 
 /* Top bar */
@@ -150,7 +152,7 @@ body {
 .progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(to right, #22c55e, #0d9bdc, #1729ea);
+  background: linear-gradient(to right, #c50fcb, #7f0ddc, #6117ea);
   transition: width 1s linear;
 }
 
@@ -273,14 +275,20 @@ body {
 }
 
 .primary-btn {
-  background: linear-gradient(to right, #22c55e, #16a34a);
-  color: #022c22;
-  box-shadow: 0 8px 18px rgba(34, 197, 94, 0.5);
+  background: linear-gradient(to right, #a20ec8, #690a84);
+  color: #f4edee;
+  box-shadow: 0 8px 18px rgba(81, 8, 92, 0.5);
+  outline: none;
 }
 
 .primary-btn:active {
   transform: translateY(2px);
-  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 10px rgba(7, 162, 64, 0.4);
+}
+
+.primary-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(162, 14, 200, 0.4);
 }
 
 .secondary-btn {
