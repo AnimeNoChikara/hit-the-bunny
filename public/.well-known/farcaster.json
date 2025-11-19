@@ -22,6 +22,7 @@
     "ogTitle": "Hit The Bunny On The Hole",
     "ogDescription": "Play a bunny whack game with your frens onchain.",
     "ogImageUrl": "https://hit-the-bunny.vercel.app/og.png",
+    "castShareUrl": "https://hit-the-bunny.vercel.app/share",
     "noindex": false
   }
 }
