@@ -521,15 +521,34 @@ function App() {
         </div>
       </section>
 
+      <div className="game-area-wrapper">
+        <main className={`game-card ${ (countdown !== null && countdown > 0) || isPreStartOpen ? "blurred" : "" }`}>
+          <div className="grid">
+            {Array.from({ length: HOLES_COUNT }).map((_, index) => (
+            <button
+                key={index}
+                className={`hole ${activeHole === index ? "active" : ""}`}
+                onClick={() => handleHoleClick(index)}
+              >
+                {activeHole === index && (
+                  <img
+                    src={bunnyImg}
+                    alt="Bunny"
+                    className="bunny bunny-in bunny-img"
+                    draggable={false}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+        </main>
 
-      {/* Kartu game */}
-      <main className="game-card">
-        {/* Pre-start overlay: tombol Play center & countdown */}
-        {isPreStartOpen && (
-          <div className="prestart-overlay" onClick={() => { /* prevent click-through */ }}>
+        {/* Overlay yang hanya menutupi game-card */}
+        {(isPreStartOpen || countdown) && (
+          <div className="prestart-overlay local" onClick={(e) => e.stopPropagation()}>
             <div className="prestart-card">
               {countdown ? (
-                <div className="countdown">{countdown}</div>
+                <div className="countdown" aria-live="polite">{countdown}</div>
               ) : (
                 <button className="primary-btn large" onClick={startSequence}>
                   Play game
@@ -538,25 +557,8 @@ function App() {
             </div>
           </div>
         )}
-        <div className="grid">
-          {Array.from({ length: HOLES_COUNT }).map((_, index) => (
-           <button
-              key={index}
-              className={`hole ${activeHole === index ? "active" : ""}`}
-              onClick={() => handleHoleClick(index)}
-            >
-              {activeHole === index && (
-                <img
-                  src={bunnyImg}
-                  alt="Bunny"
-                  className="bunny bunny-in bunny-img"
-                  draggable={false}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      </main>
+      </div>
+
     {/* Controls: hanya show Play Again ketika game over */}
       <div className="controls">
         {!isPlaying && timeLeft !== GAME_DURATION && timeLeft === 0 && (

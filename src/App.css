@@ -533,49 +533,69 @@ body {
   font-size: 0.9rem;
 }
 
-/* overlay center */
-.prestart-overlay {
-  position: fixed;
+/* biar wrapper ikut lebar game-card tapi tetap responsif */
+.game-area-wrapper {
+  position: relative;
+  display: block; /* inline-block kadang memicu sizing aneh, block lebih aman */
+  width: 100%;
+  max-width: 100%;
+}
+
+/* pastikan game-card punya border-radius dan z-index rendah */
+.game-card {
+  position: relative;
+  z-index: 1;
+  border-radius: 24px; /* pastikan sama dengan definisi game-card di atas */
+}
+
+/* overlay lokal yang hanya menutupi game-card */
+.prestart-overlay.local {
+  position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(0,0,0,0.35);
-  z-index: 60;
+  background: rgba(0, 0, 0, 0.45); /* gelap hanya di area game-card */
+  backdrop-filter: blur(2px);
+  z-index: 20; /* lebih tinggi dari game-card */
+  border-radius: 24px; /* cocokan dengan .game-card */
+  pointer-events: auto;
+  transition: opacity 160ms ease;
+  opacity: 1;
 }
 
+/* hidden state (opsional) untuk transisi) */
+.prestart-overlay.local[aria-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* adaptasi card overlay */
 .prestart-card {
   background: rgba(255,255,255,0.03);
-  backdrop-filter: blur(6px);
+  padding: 18px;
   border-radius: 12px;
-  padding: 28px;
   text-align: center;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.45);
 }
 
-/* big button variant */
+/* Tombol besar untuk Play */
 .primary-btn.large {
-  font-size: 1.25rem;
   padding: 14px 28px;
-  border-radius: 12px;
+  font-size: 1.1rem;
+  border-radius: 999px;
 }
 
-/* countdown big number */
+/* countdown */
 .countdown {
-  font-size: 4.5rem;
-  font-weight: 700;
-  color: white;
-  text-shadow: 0 6px 20px rgba(0,0,0,0.6);
+  font-size: 3.6rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 8px 22px rgba(0,0,0,0.6);
+  border: none;
 }
 
-/* blur game area when prestart/countdown active */
-.game-card.blurred,
-.game-card.blurred * {
+/* blur pada game area saat overlay aktif */
+.game-card.blurred {
   filter: blur(6px);
-  pointer-events: none; /* menghindari klik pada holes saat prestart */
+  pointer-events: none;
 }
-
-/* pastikan overlay di atas game */
-.prestart-overlay { pointer-events: auto; }
-
-/* jika kamu mau tombol play center fixed tetapi tanpa overlay penuh:
-   ubah .prestart-overlay background jadi transparent */
