@@ -518,7 +518,7 @@ export default function App() {
                   className="secondary-btn"
                   onClick={async () => {
                     try {
-                      const text = `I scored ${scoreRef.current} in Hit The Bunny! 🎯\nPlay: https://hit-the-bunny.vercel.app/`;
+                      const text = `I scored ${scoreRef.current} in Hit The Bunny! 🎯 Play Now and Earn The Future Reward https://hit-the-bunny.vercel.app/`;
                       const embeds = ["https://hit-the-bunny.vercel.app/"] as [string];
                       const res = await sdk.actions.composeCast({ text, embeds });
                       if (res?.cast) {
