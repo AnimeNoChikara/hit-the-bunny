@@ -448,12 +448,6 @@ export default function App() {
 
       {/* Controls: empty because overlay handles Play */}
       <div className="controls" aria-hidden={isPreStartOpen ? "true" : "false"} />
-
-      {/* Result text (show when game is finished & overlay not covering) */}
-      {!isPlaying && timeLeft === 0 && !isPreStartOpen && (
-        <p className="result-text">Game over! Your score: {score}</p>
-      )}
-
       {/* Leaderboard modal */}
       {isLeaderboardOpen && (
         <div className="modal-backdrop" onClick={handleCloseLeaderboard}>
