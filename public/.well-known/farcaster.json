@@ -12,16 +12,16 @@
     "splashImageUrl": "https://hit-the-bunny.vercel.app/splash.png",
     "splashBackgroundColor": "#051452",
     "webhookUrl": "https://hit-the-bunny.vercel.app/api/webhook",
-    "subtitle": "Tap the bunny, beat your friends",
-    "description": "A fast, fun bunny-whack game you can play inside Farcaster/Base mini apps.",
+    "subtitle": "Tap Before It Hides!",
+    "description": "Hit the Bunny on the Hole is a fast reaction game where you tap the bunny as it pops out of the hole. Stay focused, react quickly, and collect as many points as possible. Try to beat your best score and enjoy the challenge.",
     "screenshotUrls": [
       "hit-the-bunny.vercel.app/s1.png"
     ],
     "primaryCategory": "game",
-    "tags": ["game", "bunny", "miniapp", "baseapp"],
+    "tags": ["game", "bunny", "miniapp", "fun", "frame", "$bunny", "meme"],
     "heroImageUrl": "hit-the-bunny.vercel.app/og.png",
     "tagline": "Hit the bunny, climb the leaderboard",
-    "ogTitle": "Bunny Hit the Hole",
+    "ogTitle": "Hit The Bunny On The Hole",
     "ogDescription": "Play a bunny whack game with your frens onchain.",
     "ogImageUrl": "hit-the-bunny.vercel.app/og.png",
     "noindex": false
