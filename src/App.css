@@ -21,6 +21,9 @@ body {
   margin: 0 auto;
   /* background-image: url(./assets/bg3.png); */
   background-size: cover;
+  box-sizing: border-box;
+  padding-bottom: 100px; /* supaya konten tidak tertutup navbar bawah */
+
 }
 
 /* NAVBAR */
@@ -241,6 +244,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
+
 }
 
 /* Grid & holes */
@@ -662,6 +667,8 @@ body {
   align-items: center;    
   justify-content: center;
   letter-spacing: 4px;
+  font-family: 'JUMBOTRON', sans-serif;
+                                                
 }
 
 /* countdown */
@@ -821,13 +828,13 @@ body {
 /* BOTTOM NAVBAR */
 .bottom-nav {
   position: fixed;
-  bottom: 1%;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 94%;
+  width: 100%;
   max-width: 480px;
   background: rgba(8, 14, 32, 0.72);
-  padding: 10px 14px;
+  padding: 5px 7px;
   display: flex;
   justify-content: space-around;
   align-items: center;

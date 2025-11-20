@@ -38,17 +38,17 @@ function BottomNav({ route, setRoute }: { route: Route; setRoute: (r: Route) => 
   return (
     <nav className="bottom-nav" role="navigation" aria-label="Main navigation">
       <button className={`nav-item ${route === "home" ? "active" : ""}`} onClick={() => setRoute("home")} aria-label="Home">
-        <img width="50" height="50" src="https://img.icons8.com/?size=100&id=NOLgNDi7UQdG&format=png&color=000000" alt="Home"/>
+        <img width="30" height="30" src="https://img.icons8.com/?size=100&id=NOLgNDi7UQdG&format=png&color=000000" alt="Home"/>
         <span>Home</span>
       </button>
 
       <button disabled className={`nav-item ${route === "tasks" ? "active" : ""}`} onClick={() => setRoute("tasks")} aria-label="Tasks">
-        <img width="50" height="50" src="https://img.icons8.com/?size=100&id=HUj2B8hq1xUW&format=png&color=000000" alt="task"/>
+        <img width="30" height="30" src="https://img.icons8.com/?size=100&id=HUj2B8hq1xUW&format=png&color=000000" alt="task"/>
         <span>Tasks</span>
       </button>
 
       <button disabled className={`nav-item ${route === "nft" ? "active" : ""}`} onClick={() => setRoute("nft")} aria-label="NFT">
-        <img width="50" height="50" src="https://img.icons8.com/?size=100&id=SxB3taNaJxYE&format=png&color=000000" alt="NFT"/>
+        <img width="30" height="30" src="https://img.icons8.com/?size=100&id=SxB3taNaJxYE&format=png&color=000000" alt="NFT"/>
         <span>NFT</span>
       </button>
     </nav>
