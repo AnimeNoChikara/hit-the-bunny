@@ -30,7 +30,7 @@ body {
 .top-bar{
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:center;
   gap:12px;
   border-radius:14px;
   border:1px solid var(--glass-border);
@@ -43,6 +43,10 @@ body {
   gap:5px;
   position:relative;
   left: 0%;
+}
+
+.avatar-btn:focus {
+  outline: none;
 }
 
 .menu-btn{
@@ -63,7 +67,7 @@ body {
 .menu-btn.open{ background: rgba(255,255,255,0.02); transform:translateY(1px); }
 .menu-btn:focus{ outline:none; }
 
-.avatar-btn{ border:none; background:transparent; padding: 0; padding-top: 1%; cursor:pointer; }
+.avatar-btn{ border:none; background:transparent; padding: 0; padding-top: 1%; cursor:pointer; outline: none; padding-left: 10px; }
 .top-avatar{
   width:42px; height:42px; border-radius:999px; object-fit:cover; border:2px solid rgba(255,255,255,0.04);
   box-shadow: 0 6px 18px rgba(2,6,23,0.6);
