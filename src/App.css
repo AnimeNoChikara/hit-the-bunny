@@ -661,7 +661,6 @@ body {
   gap: 5px;
   align-items: center;    
   justify-content: center;
-  font-family:fantasy;
   letter-spacing: 4px;
 }
 
@@ -851,10 +850,12 @@ body {
   flex-direction: column;
   align-items: center;
   background: transparent;
-  font-family: cursive;
+  font-family: 'Exo 2', sans-serif;
+  outline: none;
 }
-
-
+.nav-item:focus {
+  outline: none;
+}
 
 /* Active page */
 .nav-item.active {
