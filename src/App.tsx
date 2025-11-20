@@ -527,9 +527,6 @@ export default function App() {
                   <div className="profile-fid">fid {currentUser?.fid ?? "-"}</div>
                 </div>
               </div>
-              <div className="menu-rewards">
-                <div className="gift"><button className="gift"><i className="fa-solid fa-gift">  Rewards</i> (coming soon)</button></div>
-              </div>
             </div>
           )}
         </div>
