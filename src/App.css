@@ -654,9 +654,15 @@ body {
 
 /* Tombol besar untuk Play */
 .primary-btn.large {
-  padding: 14px 28px;
-  font-size: 1.1rem;
+  padding: 14px 16px;
+  font-size: 1.2rem;
   border-radius: 999px;
+  display:flex;
+  gap: 5px;
+  align-items: center;    
+  justify-content: center;
+  font-family:fantasy;
+  letter-spacing: 4px;
 }
 
 /* countdown */
@@ -812,11 +818,78 @@ body {
 .gift:focus {
   outline: none;
 }
+
+/* BOTTOM NAVBAR */
+.bottom-nav {
+  position: fixed;
+  bottom: 1%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 94%;
+  max-width: 480px;
+  background: rgba(8, 14, 32, 0.72);
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 20;
+}
+
+/* Each nav item button */
+.nav-item {
+  border: none;
+  color: #ffffff;
+  font-size: 1rem;
+  padding: 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  font-family: cursive;
+}
+
+
+
+/* Active page */
+.nav-item.active {
+  color: #05dce4;
+  transform: translateY(-4px);
+}
+
+
+/* Nav label */
+.nav-label {
+  font-size: 0.7rem;
+  margin-top: 2px;
+  opacity: 0.9;
+}
+
+@media (max-width: 360px) {
+  .bottom-nav {
+    padding: 8px 12px;
+  }
+  .nav-btn {
+    font-size: 1.1rem;
+  }
+  .nav-label {
+    font-size: 0.65rem;
+  }
+}
+
+
 .footer {
   text-align: center;
   font-size: 1rem;
   color: #6b7280;
   font-family: cursive;}
+
+
 
   /* Beta notice — Farcaster miniapp style (glass, subtle) */
 .beta-backdrop {

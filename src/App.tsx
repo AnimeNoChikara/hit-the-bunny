@@ -15,6 +15,9 @@ import { supabase } from "./lib/supabaseClient";
 const HOLES_COUNT = 9;
 const GAME_DURATION = 30; // seconds
 const BUNNY_INTERVAL = 700; // ms
+const MIN_POINTS_TO_MINT = 500;
+
+type Route = "home" | "tasks" | "nft";
 
 // ---------- Types ----------
 type MiniAppUser = {
@@ -31,16 +34,136 @@ type LeaderboardEntry = {
   best_score: number;
 };
 
+function BottomNav({ route, setRoute }: { route: Route; setRoute: (r: Route) => void; points: number }) {
+  return (
+    <nav className="bottom-nav" role="navigation" aria-label="Main navigation">
+      <button className={`nav-item ${route === "home" ? "active" : ""}`} onClick={() => setRoute("home")} aria-label="Home">
+        <img width="50" height="50" src="https://img.icons8.com/?size=100&id=NOLgNDi7UQdG&format=png&color=000000" alt="Home"/>
+        <span>Home</span>
+      </button>
+
+      <button disabled className={`nav-item ${route === "tasks" ? "active" : ""}`} onClick={() => setRoute("tasks")} aria-label="Tasks">
+        <img width="50" height="50" src="https://img.icons8.com/?size=100&id=HUj2B8hq1xUW&format=png&color=000000" alt="task"/>
+        <span>Tasks</span>
+      </button>
+
+      <button disabled className={`nav-item ${route === "nft" ? "active" : ""}`} onClick={() => setRoute("nft")} aria-label="NFT">
+        <img width="50" height="50" src="https://img.icons8.com/?size=100&id=SxB3taNaJxYE&format=png&color=000000" alt="NFT"/>
+        <span>NFT</span>
+      </button>
+    </nav>
+  );
+}
+
+// ---------- Page components ----------
+
+function TasksPage({ points, onCompleteTask, onClaimPoints }: { points: number; onCompleteTask: (taskId: string) => void; onClaimPoints: (amt?: number) => void; }) {
+  const tasks = [
+    { id: "t1", title: "Daily login", points: 10, desc: "Login daily to earn points." },
+    { id: "t2", title: "Play a match", points: 5, desc: "Finish one game." },
+    { id: "t3", title: "Share score", points: 15, desc: "Share your score on Farcaster." },
+  ];
+
+  return (
+    <div className="page page-tasks">
+      <h3>Tasks & Points</h3>
+
+      <div className="points-overview">
+        <div>
+          <div className="points-label">Your BUNNY Points</div>
+          <div className="points-value">{points} pts</div>
+        </div>
+        <div className="points-actions">
+          <button className="secondary-btn" onClick={() => onClaimPoints()} aria-label="View history">View history</button>
+        </div>
+      </div>
+
+      <div className="tasks-list">
+        {tasks.map((t) => (
+          <div key={t.id} className="task-row">
+            <div className="task-main">
+              <div className="task-title">{t.title}</div>
+              <div className="task-desc">{t.desc}</div>
+            </div>
+            <div className="task-actions">
+              <div className="task-points">+{t.points}</div>
+              <button className="primary-btn" onClick={() => onCompleteTask(t.id)}>Complete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NFTPage({ points, onMint, isMinting }: { points: number; onMint: () => Promise<void> | void; isMinting: boolean; }) {
+  const eligible = points >= MIN_POINTS_TO_MINT;
+  return (
+    <div className="page page-nft">
+      <h3>Mint NFT</h3>
+      <p>Mint exclusive NFT when you reach at least <strong>{MIN_POINTS_TO_MINT} BUNNY points</strong>.</p>
+
+      <div className="mint-card">
+        <div className="mint-preview">🎨</div>
+        <div className="mint-info">
+          <div className="mint-title">Exclusive Bunny Token</div>
+          <div className="mint-req">Required: {MIN_POINTS_TO_MINT} pts</div>
+          <div className="mint-status">{eligible ? "You are eligible!" : `You need ${MIN_POINTS_TO_MINT - points} more points`}</div>
+          <button className="primary-btn" disabled={!eligible || isMinting} onClick={() => onMint()}>
+            {isMinting ? "Minting..." : eligible ? "Mint NFT" : "Not eligible"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // ---------- Main component ----------
 export default function App() {
   // --- user
   const [currentUser, setCurrentUser] = useState<MiniAppUser | null>(null);
-
-  // --- game state
+  // game state
   const [isPlaying, setIsPlaying] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [score, setScore] = useState(0);
   const [activeHole, setActiveHole] = useState<number | null>(null);
+
+
+  // routing & points
+  const [route, setRoute] = useState<Route>("home");
+  const [points, setPoints] = useState<number>(0);
+
+
+  // minting
+  const [isMinting, setIsMinting] = useState(false);
+
+  // --- minting
+  const handleMint = async () => {
+    if (points < MIN_POINTS_TO_MINT) return;
+    setIsMinting(true);
+    try {
+      // ===== PLACEHOLDER =====
+      // Insert your mint logic here: call backend, sign tx, etc.
+      // For demo we'll simulate network delay:
+      await new Promise((res) => setTimeout(res, 1500));
+
+      // On success: deduct points (or mark claimed)
+      const newPoints = points - MIN_POINTS_TO_MINT;
+      setPoints(newPoints);
+
+      // optional: persist to supabase: upsert player_rewards with new unclaimed_points
+      // await supabase.from('player_rewards').upsert({ fid: currentUser.fid, unclaimed_points: newPoints }, { onConflict: 'fid' });
+
+      alert("Mint successful! Congratulations 🎉");
+      // redirect to NFT page / show minted token link
+    } catch (e) {
+      console.error("mint failed", e);
+      alert("Mint failed — please try again.");
+    } finally {
+      setIsMinting(false);
+    }
+  };
 
   // refs for timers
   const timerRef = useRef<number | null>(null);
@@ -239,6 +362,34 @@ export default function App() {
     setIsCongratsOpen(true);
   };
 
+  const handleCompleteTask = async (taskId: string) => {
+  // contoh: map task id ke poin
+    const mapping: Record<string, number> = { t1: 10, t2: 5, t3: 15 };
+    const reward = mapping[taskId] ?? 0;
+    const newPoints = points + reward;
+    setPoints(newPoints);
+
+    // optional: persist to supabase
+    try {
+      if (currentUser) {
+        await supabase
+          .from("player_rewards")
+          .upsert({ fid: currentUser.fid, unclaimed_points: newPoints }, { onConflict: "fid" });
+      }
+    } catch (e) {
+      console.warn("persist rewards failed", e);
+    }
+
+    alert(`Task completed — you earned ${reward} points!`);
+  };
+
+  const handleClaimPoints = (amt?: number) => {
+    // placeholder: open modal or show history
+    alert("Feature coming soon: claim / withdraw points");
+    console.log("Claiming:", amt); // now amt is used
+  };
+
+
   // ---------- hole click ----------
   const handleHoleClick = (index: number) => {
     if (!isPlaying) return;
@@ -342,18 +493,11 @@ export default function App() {
   // ---------- render ----------
   return (
     <div className="app">
+      {route === "home" && (
+      <>
       {/* Navbar / Top bar */}
       <header className="top-bar">
         <div className="nav-left" ref={menuRef}>
-          <button
-            className={`menu-btn ${isMenuOpen ? "open" : ""}`}
-            onClick={() => setIsMenuOpen((s) => !s)}
-            aria-haspopup="true"
-            aria-expanded={isMenuOpen}
-            aria-label="Open menu"
-          ><i className="fi fi-br-menu-burger"></i>
-          </button>
-          {/* profile avatar only in topbar */}
           <button
             className="avatar-btn"
             onClick={() => setIsMenuOpen((s) => !s)}
@@ -391,11 +535,9 @@ export default function App() {
         </div>
 
         <div className="nav-right">
-          <button className="trophy-btn" onClick={handleOpenLeaderboard} aria-label="View leaderboard">🏆</button>
+          <button className="trophy-btn" onClick={handleOpenLeaderboard} aria-label="View leaderboard"><img width="40" height="40" src="https://img.icons8.com/arcade/64/trophy.png" alt="trophy"/></button>
         </div>
       </header>
-
-      {/* Panel info */}
       <section className="panel">
         <div className="info-bar">
           <div className="info-item">
@@ -432,22 +574,37 @@ export default function App() {
               </button>
             ))}
           </div>
-        </main>
+      </main>
 
-        {/* local overlay (only above game-card) */}
-        {(isPreStartOpen || countdown) && (
-          <div className="prestart-overlay local" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <div className={`prestart-card ${countdown ? "countdown-mode" : ""}`}>
-              {countdown ? (
-                <div className="countdown" aria-live="polite">{countdown}</div>
-              ) : (
-                <button className="primary-btn large" onClick={startSequence}>Play game</button>
-              )}
-            </div>
+      {/* local overlay (only above game-card) */}
+      {(isPreStartOpen || countdown) && (
+        <div className="prestart-overlay local" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+          <div className={`prestart-card ${countdown ? "countdown-mode" : ""}`}>
+            {countdown ? (
+              <div className="countdown" aria-live="polite">{countdown}</div>
+            ) : (
+              <button className="primary-btn large" onClick={startSequence}>PLAY<img width="30" height="30" src="https://img.icons8.com/arcade/64/controller.png" alt="controller"/></button>
+            )}
           </div>
-        )}
+        </div>
+      )}
       </div>
+      </> 
+  )}
+      <main className="content-area">
+        {route === "home" && null /* or keep HomePage content if you have */ }
+        {route === "tasks" && (
+        <TasksPage
+          points={points}
+          onCompleteTask={handleCompleteTask}
+          onClaimPoints={(amt?: number) => handleClaimPoints(amt)}
+        />
+      )}
+        {route === "nft" && (<NFTPage points={points} onMint={handleMint} isMinting={isMinting} />)}
+      </main>
 
+      <BottomNav route={route} setRoute={setRoute} points={points} />
+      
       {/* Controls: empty because overlay handles Play */}
       <div className="controls" aria-hidden={isPreStartOpen ? "true" : "false"} />
       {/* Leaderboard modal */}
@@ -545,14 +702,10 @@ export default function App() {
 
               </div>
             </div>
-
             <button className="modal-close" aria-label="Close congratulations" onClick={() => setIsCongratsOpen(false)}>✕</button>
           </div>
         </div>
       )}
-      <footer className="footer">
-        0.1.6
-      </footer>
       {showBetaNotice && (
         <div className="beta-backdrop" onClick={() => setShowBetaNotice(false)}>
           <div className="beta-modal" onClick={(e) => e.stopPropagation()}>
